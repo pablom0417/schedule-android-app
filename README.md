@@ -6,7 +6,7 @@
 [![API](https://img.shields.io/badge/API-21%2B-orange.svg?style=flat)](https://android-arsenal.com/api?level=21)
 [![License Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=true)](http://www.apache.org/licenses/LICENSE-2.0)
 
-This library uses Android X depencies and is written in Kotlin.
+This library is written in Kotlin.
 
 
 ## Usage
