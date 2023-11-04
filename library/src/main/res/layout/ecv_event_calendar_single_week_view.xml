@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:theme="@style/Theme.Material3.Light">
+
+    <RelativeLayout
+        android:id="@+id/eventCalendarSingleWeekViewMonthYearHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/eventCalendarSingleWeekViewMonthYearTextView1"
+            style="@style/ECV_MonthYear"
+            android:layout_centerInParent="true"
+            android:minHeight="48dp" />
+
+    </RelativeLayout>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:divider="@drawable/ecv_divider_vertical"
+        app:showDividers="beginning|middle|end">
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_monday" />
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_tuesday" />
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_wednesday" />
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_thursday" />
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_friday" />
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_saturday" />
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_sunday" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/eventCalendarSingleWeekViewRow1"
+        android:layout_width="match_parent"
+        android:layout_height="126dp"
+        android:baselineAligned="false"
+        android:orientation="horizontal"
+        app:divider="@drawable/ecv_divider_vertical"
+        app:showDividers="middle|beginning|end">
+
+        <include
+            android:id="@+id/eventCalendarSingleWeekViewDay1"
+            layout="@layout/ecv_textview_circle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <include
+            android:id="@+id/eventCalendarSingleWeekViewDay2"
+            layout="@layout/ecv_textview_circle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <include
+            android:id="@+id/eventCalendarSingleWeekViewDay3"
+            layout="@layout/ecv_textview_circle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <include
+            android:id="@+id/eventCalendarSingleWeekViewDay4"
+            layout="@layout/ecv_textview_circle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <include
+            android:id="@+id/eventCalendarSingleWeekViewDay5"
+            layout="@layout/ecv_textview_circle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <include
+            android:id="@+id/eventCalendarSingleWeekViewDay6"
+            layout="@layout/ecv_textview_circle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <include
+            android:id="@+id/eventCalendarSingleWeekViewDay7"
+            layout="@layout/ecv_textview_circle"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+</androidx.appcompat.widget.LinearLayoutCompat>

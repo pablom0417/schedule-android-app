@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- https://www.color-hex.com/color/3b5ca3 -->
+    <color name="colorBackground">@color/colorWhite</color>
+    <color name="colorCharcoalGray">#6C6868</color>
+    <color name="colorIconTint">@color/colorCharcoalGray</color>
+
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorStroke">#AFB1B3</color>
+    <color name="alert">#EEE3AF</color>
+    <color name="alertStroke">#825B1C</color>
+
+    <color name="colorPrimary">#3B5CA3</color>
+    <color name="colorPrimaryDark">@color/colorPrimary</color>
+    <color name="colorAccent">@color/colorPrimary</color>
+</resources>
