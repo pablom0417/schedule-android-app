@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "196635391432",
+    "project_id": "eventcalendar-566a9",
+    "storage_bucket": "eventcalendar-566a9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:196635391432:android:d348dcebed9e215b2dbcfd",
+        "android_client_info": {
+          "package_name": "com.nmd.eventCalendar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDBIt7KkmjK9hTL9usddy1mLfeD4HpO9c0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -2,4 +2,14 @@
     <string name="app_name">Event Calendar</string>
     <string name="event_calendar_no_events">No events where found for the selected day!</string>
     <string name="event_calendar_current_week">Aktuelle Woche</string>
+    <string name="login">Login</string>
+    <string name="email_address">Email address</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="or">Or, login with</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="already_registered">Already registered?</string>
+    <string name="by_signing_up_you_agree_to_our_terms_conditions_and_privacy_policy"><![CDATA[By signing up, you agree to our Terms & Conditions and Privacy Policy]]></string>
+    <string name="full_name">Full name</string>
 </resources>
