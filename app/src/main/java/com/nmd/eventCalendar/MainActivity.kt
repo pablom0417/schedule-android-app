@@ -12,8 +12,10 @@ import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.AdapterView
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -43,16 +45,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+import kotlin.properties.Delegates
 
 
 open class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private var selected: Boolean = false
+    private var selectedDate: String = ""
 
     @SuppressLint("StaticFieldLeak")
     var logoutButton: ImageView? = null
     var fullName: TextView? = null
     var firebaseAuth: FirebaseAuth? = null
     private val authStateListener: AuthStateListener? = null
+
+    var dataModels: ArrayList<DataModel>? = null
+    private var adapter: CustomAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,6 +85,7 @@ open class MainActivity : AppCompatActivity() {
                 R.string.navigation_drawer_close
             )
             drawerLayout.addDrawerListener(toggle)
+            toggle.drawerArrowDrawable.color = resources.getColor(R.color.white)
             toggle.syncState()
 
             val navHeader: View = navView.getHeaderView(0)
@@ -84,8 +93,6 @@ open class MainActivity : AppCompatActivity() {
 
             val user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
             if (user != null) {
-                Log.d("user-----", user.email!!)
-                Log.d("user++++", username.text as String)
                 username.text = user.email
             }
 
@@ -113,10 +120,19 @@ open class MainActivity : AppCompatActivity() {
 
             eventCalendarView.addOnDayClickListener(object : EventCalendarDayClickListener {
                 override fun onClick(day: Day) {
-                    val eventList = eventCalendarView.events.filter { it.date == day.date }
-                    bottomSheet(day, eventList)
+                    Log.d(day.date, day.date)
+                    if (selectedDate == day.date && selected) {
+                        val eventList = eventCalendarView.events.filter { it.date == day.date }
+                        bottomSheet(day, eventList)
+                        selected = false
+                    } else {
+
+                        selectedDate = day.date
+                        selected = true
+                    }
                 }
             })
+
             eventCalendarView.addOnCalendarScrollListener(object : EventCalendarScrollListener {
                 override fun onScrolled(month: Int, year: Int) {
                     Log.i("ECV", "Scrolled to: $month $year")
@@ -147,14 +163,26 @@ open class MainActivity : AppCompatActivity() {
                 showLogoutConfirmDialog()
             })
 
-            navHeader.findViewById<MaterialTextView>(R.id.notificationMaterialTextView).setOnClickListener {
-                showAcceptConfirmDialog()
-                drawerLayout.closeDrawer(navView)
+            dataModels = ArrayList()
+
+            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
+            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
+            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+
+            adapter = CustomAdapter(dataModels!!, applicationContext)
+
+            list.adapter = adapter
+            list.setOnItemClickListener { parent, view, position, id ->
+                val dataModel: DataModel = dataModels!![position]
+                showAcceptConfirmDialog(dataModel)
             }
 
             sideInvitationListButton.setOnClickListener {
-                val intent = Intent(this@MainActivity, InvitationActivity::class.java)
-                startActivity(intent)
+                drawerLayout.closeDrawer(navView)
             }
         }
     }
@@ -193,16 +221,18 @@ open class MainActivity : AppCompatActivity() {
         alertDialogBuilder.show()
     }
 
-    private fun showAcceptConfirmDialog() {
+    private fun showAcceptConfirmDialog(dataModel: DataModel) {
         val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
-        alertDialogBuilder.setTitle("Accept Invitation")
-        alertDialogBuilder.setMessage("Are you sure you want to invite John Doe?")
+        alertDialogBuilder.setTitle("Invitation")
+        alertDialogBuilder.setMessage("What do you want to do with ${dataModel.name}?")
         // setup a dialog window
         alertDialogBuilder.setCancelable(false)
             .setPositiveButton("Accept",
-                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "You have invited John Doe.", Toast.LENGTH_SHORT).show() })
+                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "You have invited ${dataModel.name}.", Toast.LENGTH_SHORT).show() })
             .setNegativeButton("Decline",
-                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "You have declined John Doe.", Toast.LENGTH_SHORT).show() })
+                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "You have declined ${dataModel.name}.", Toast.LENGTH_SHORT).show() })
+            .setNeutralButton("Keep prev",
+                DialogInterface.OnClickListener { dialog, id ->  })
 
         // create an alert dialog
         alertDialogBuilder.setCancelable(true)
@@ -211,11 +241,11 @@ open class MainActivity : AppCompatActivity() {
 
     protected fun showLogoutConfirmDialog() {
         val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
-        alertDialogBuilder.setTitle("Logout")
-        alertDialogBuilder.setMessage("Are you sure you want to log out?")
+        alertDialogBuilder.setTitle("Sign out")
+        alertDialogBuilder.setMessage("Are you sure you want to sign out?")
         // setup a dialog window
         alertDialogBuilder.setCancelable(false)
-            .setPositiveButton("Logout",
+            .setPositiveButton("Sign out",
                 DialogInterface.OnClickListener { dialog, id ->
                     run {
 
@@ -223,17 +253,17 @@ open class MainActivity : AppCompatActivity() {
                         openLoginActivity()
                         Toast.makeText(
                             this@MainActivity,
-                            "Successfully logged out!",
+                            "Successfully signed out!",
                             Toast.LENGTH_SHORT
                         ).show()
                         Toast.makeText(
                             this@MainActivity,
-                            "You have been logged out.",
+                            "You have been signed out.",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
                 })
-            .setNegativeButton("Keep login",
+            .setNegativeButton("Keep signing in",
                 DialogInterface.OnClickListener { dialog, id ->  })
 
         // create an alert dialog
@@ -252,9 +282,8 @@ open class MainActivity : AppCompatActivity() {
             this,
             { _, year, monthOfYear, dayOfMonth ->
                 // date to our edit text.
-                val dat = ((monthOfYear + 1).toString() + "/" + dayOfMonth + "/" + year)
+                val dat = String.format("%02d/%02d/%04d", monthOfYear + 1, dayOfMonth, year)
                 component.setText(dat)
-                pickTime(component, dat)
             },
             // and day for the selected date in our date picker.
             year,
@@ -263,21 +292,6 @@ open class MainActivity : AppCompatActivity() {
         )
         // to display our date picker dialog.
         datePickerDialog.show()
-    }
-
-    private fun pickTime(component: EditText, date: String) {
-        val c = Calendar.getInstance()
-        val hour = c.get(Calendar.HOUR_OF_DAY)
-        val minute = c.get(Calendar.MINUTE)
-
-        val timePickerDialog = TimePickerDialog(this,
-            OnTimeSetListener { view, hourOfDay, minute ->
-                val formatTime = "$hourOfDay:$minute"
-                val dateTime: String = "$date $formatTime"
-                component.setText(dateTime)
-            }, hour + 1, minute, false
-        )
-        timePickerDialog.show()
     }
 
     private fun openLoginActivity() {
@@ -459,7 +473,7 @@ open class MainActivity : AppCompatActivity() {
                             val randomEvent = randomEvents.random()
                             val randomDay = (1..daysInMonth).random()
                             val dateStr =
-                                String.format("%02d.%02d.%04d", randomDay, month, currentYear)
+                                String.format("%02d/%02d/%04d", month, randomDay, currentYear)
                             val newEvent = Event(dateStr, randomEvent.name, randomEvent.color)
                             eventsForMonth.add(newEvent)
                         }

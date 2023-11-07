@@ -3,7 +3,9 @@ package com.nmd.eventCalendar.adapter
 import android.annotation.SuppressLint
 import android.content.res.ColorStateList
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.util.SparseIntArray
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -32,6 +34,10 @@ import java.util.Calendar
 
 class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
     RecyclerView.Adapter<InfiniteAdapter.AdapterViewHolder>() {
+
+    private var selected: Boolean = false
+    private var selectedDate: String = ""
+    private var prevIndex: Int = -1
 
     inner class AdapterViewHolder(val binding: EcvEventCalendarViewBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -96,8 +102,7 @@ class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
             val year = item.get(1)
 
             val monthName = month.getMonthName(root.context)
-            val monthYearText =
-                if (holder.yearAdapterViewHolder == year) monthName else "$monthName $year"
+            val monthYearText = "$monthName $year"
             eventCalendarViewMonthYearTextView1?.text = monthYearText
             eventCalendarViewMonthYearTextView2?.text = monthYearText
 
@@ -130,11 +135,26 @@ class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
         }
     }
 
+    @SuppressLint("ResourceAsColor")
     private fun styleTextViews(days: List<Day>, list: List<EcvTextviewCircleBinding>) {
         for ((index, day) in days.withIndex()) {
             val dayItemLayout = list[index]
 
             dayItemLayout.eventCalendarViewDayFrameLayout.setOnClickListener {
+                if (selectedDate == day.date && selected) {
+                    dayItemLayout.eventCalendarViewDayFrameLayout.setBackgroundColor(Color.WHITE)
+                    selected = false
+                    selectedDate = ""
+                    prevIndex = index
+                } else {
+                    if (index != prevIndex && prevIndex != -1) {
+                        list[prevIndex].eventCalendarViewDayFrameLayout.setBackgroundColor(Color.WHITE)
+                    }
+                    dayItemLayout.eventCalendarViewDayFrameLayout.setBackgroundColor(Color.GRAY)
+                    selected = true
+                    selectedDate = day.date
+                    prevIndex = index
+                }
                 eventCalendarView.clickListener?.onClick(day)
             }
 
@@ -192,6 +212,7 @@ class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
                     setTypeface(typeface, Typeface.BOLD)
                 } else {
                     setTypeface(typeface, Typeface.ITALIC)
+                    setTextColor(R.color.ecv_item_day_name_color)
                 }
             }
         }

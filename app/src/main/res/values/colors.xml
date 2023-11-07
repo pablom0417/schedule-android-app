@@ -17,4 +17,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="iron">#DDDEE0</color>
     <color name="badgeColor">#FF0000</color>
+    <color name="colorDarkRed">#B71C1C</color>
+    <color name="colorDarkGreen">#1B5E20</color>
 </resources>

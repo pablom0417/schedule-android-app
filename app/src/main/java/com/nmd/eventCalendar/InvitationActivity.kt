@@ -111,7 +111,7 @@ open class InvitationActivity : AppCompatActivity() {
                         ).show()
                     }
                 })
-            .setNegativeButton("Keep login",
+            .setNegativeButton("Keep signing in",
                 DialogInterface.OnClickListener { dialog, id ->  })
 
         // create an alert dialog

@@ -16,12 +16,15 @@
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorBackground"
+            android:background="@color/colorDarkGreen"
             android:fitsSystemWindows="true">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
+                app:titleTextColor="@color/white"
+                app:navigationIconTint="@color/white"
+                android:elevation="10dp"
                 android:layout_height="?attr/actionBarSize">
 
                 <LinearLayout
@@ -38,7 +41,18 @@
                         android:padding="16dp"
                         android:src="@android:drawable/stat_notify_chat"
                         android:theme="@style/RippleColor"
-                        app:tint="@color/colorIconTint" />
+                        app:tint="@color/white" />
+                    <TextView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:text="1"
+                        android:textColor="@color/white"
+                        android:gravity="center"
+                        android:textSize="11sp"
+                        android:background="@drawable/background_rounded"
+                        android:backgroundTint="@color/badgeColor"
+                        android:layout_marginStart="-20dp"
+                        android:layout_marginTop="10dp" />
 
                     <ImageView
                         android:id="@+id/eventCalendarViewCalendarImageView"
@@ -48,7 +62,7 @@
                         android:padding="16dp"
                         android:src="@drawable/icon_calendar_today"
                         android:theme="@style/RippleColor"
-                        app:tint="@color/colorIconTint" />
+                        app:tint="@color/white" />
 
                     <ImageView
                         android:id="@+id/eventCalendarLogoutImageView"
@@ -58,7 +72,7 @@
                         android:padding="16dp"
                         android:src="@drawable/icon_logout"
                         android:theme="@style/RippleColor"
-                        app:tint="@color/colorIconTint" />
+                        app:tint="@color/white" />
 
                 </LinearLayout>
 
@@ -79,7 +93,7 @@
                 app:ecv_count_background_text_color="@android:color/white"
                 app:ecv_count_background_tint_color="@android:color/holo_blue_light"
                 app:ecv_count_visible="true"
-                app:ecv_current_day_background_tint_color="@android:color/holo_red_dark"
+                app:ecv_current_day_background_tint_color="@android:color/holo_blue_bright"
                 app:ecv_current_day_text_color="@android:color/white"
                 app:ecv_disallow_intercept="false"
                 app:ecv_event_item_automatic_text_color="true"
@@ -98,7 +112,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_margin="16dp"
-                android:src="@drawable/icon_calendar_today_outline"
+                android:src="@drawable/icon_pencil"
                 app:backgroundTint="@android:color/holo_blue_dark"
                 app:rippleColor="@color/ecv_ripple_color"
                 app:tint="@color/colorWhite" />
@@ -118,7 +132,16 @@
         app:itemIconTint="@color/colorCharcoalGray"
         app:itemTextColor="@color/colorCharcoalGray">
 
+        <ListView
+            android:id="@+id/list"
+            android:layout_marginTop="250dp"
+            android:layout_marginBottom="100dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
+            style="?attr/floatingActionButtonTertiaryStyle"
             android:id="@+id/sideInvitationListButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -128,6 +151,7 @@
              />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
+            style="?attr/floatingActionButtonSurfaceStyle"
             android:id="@+id/sideLogoutButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

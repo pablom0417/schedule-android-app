@@ -119,7 +119,7 @@ class LoginActivity : AppCompatActivity() {
             password!!.error = "Password should contain at least 8 characters!"
         } else {
             progressDialog!!.setMessage("Please wait...")
-            progressDialog!!.setTitle("Logging in")
+            progressDialog!!.setTitle("Signing in")
             progressDialog!!.setCanceledOnTouchOutside(false)
             progressDialog!!.show()
             mAuth!!.signInWithEmailAndPassword(email, pass)
@@ -132,7 +132,7 @@ class LoginActivity : AppCompatActivity() {
                         openHomeActivity()
                         Toast.makeText(
                             this@LoginActivity,
-                            "Successfully logged in!",
+                            "Successfully signed in!",
                             Toast.LENGTH_SHORT
                         )
                             .show()
