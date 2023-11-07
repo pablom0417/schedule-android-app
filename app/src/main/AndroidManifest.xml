@@ -21,6 +21,7 @@
         </activity>
         <activity android:name="com.nmd.eventCalendar.SignUpActivity" />
         <activity android:name="com.nmd.eventCalendar.MainActivity" />
+        <activity android:name="com.nmd.eventCalendar.InvitationActivity" />
     </application>
 
 </manifest>

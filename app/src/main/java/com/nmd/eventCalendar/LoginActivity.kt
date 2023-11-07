@@ -48,7 +48,6 @@ class LoginActivity : AppCompatActivity() {
         password = binding.password
         loginButton = binding.loginButton
         forgotPassword = binding.forgotPassword
-        option1 = binding.option1
         signUp = binding.signUp
         progressDialog = ProgressDialog(this)
         mAuth = FirebaseAuth.getInstance()

@@ -1,25 +1,40 @@
 package com.nmd.eventCalendar
 
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.app.TimePickerDialog.OnTimeSetListener
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.os.Vibrator
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.badge.BadgeDrawable
+import com.google.android.material.badge.BadgeUtils
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.textfield.TextInputLayout
+import com.google.android.material.textview.MaterialTextView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
+import com.google.firebase.auth.FirebaseUser
 import com.nmd.eventCalendar.MainActivity.RandomEventList.Companion.createRandomEventList
 import com.nmd.eventCalendar.`interface`.EventCalendarDayClickListener
 import com.nmd.eventCalendar.`interface`.EventCalendarScrollListener
 import com.nmd.eventCalendar.model.Day
 import com.nmd.eventCalendar.model.Event
+import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivityMainBinding
 import com.nmd.eventCalendarSample.databinding.BottomSheetBinding
 import com.nmd.eventCalendarSample.databinding.BottomSheetSingleWeekBinding
@@ -29,7 +44,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 
-class MainActivity : AppCompatActivity() {
+
+open class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     @SuppressLint("StaticFieldLeak")
@@ -42,25 +58,39 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setSupportActionBar(binding.toolbar)
 
         initialize()
-
-        logoutButton = binding.eventCalendarViewShuffleImageView
-        logoutButton!!.setOnClickListener(View.OnClickListener {
-            FirebaseAuth.getInstance().signOut()
-            openLoginActivity()
-            Toast.makeText(this@MainActivity, "Successfully logged out!", Toast.LENGTH_SHORT).show()
-        })
     }
 
+    @SuppressLint("InflateParams", "SetTextI18n")
     private fun initialize() {
         with(binding) {
             progressBar.visibility = View.VISIBLE
             eventCalendarView.visibility = View.GONE
 
+            val toggle = ActionBarDrawerToggle(
+                this@MainActivity,
+                drawerLayout,
+                binding.toolbar,
+                R.string.navigation_drawer_open,
+                R.string.navigation_drawer_close
+            )
+            drawerLayout.addDrawerListener(toggle)
+            toggle.syncState()
+
+            val navHeader: View = navView.getHeaderView(0)
+            val username = navHeader.findViewById(R.id.textViewUserName) as TextView
+
+            val user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                Log.d("user-----", user.email!!)
+                Log.d("user++++", username.text as String)
+                username.text = user.email
+            }
+
             val year = Calendar.getInstance().get(Calendar.YEAR)
+
             eventCalendarView.setMonthAndYear(
                 startMonth = 1, startYear = year, endMonth = 12, endYear = year
             )
@@ -68,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                 eventCalendarView.scrollToCurrentMonth(false)
             }
 
-            eventCalendarViewShuffleImageView.setOnClickListener {
+            eventCalendarLogoutImageView.setOnClickListener {
                 progressBar.visibility = View.VISIBLE
                 eventCalendarView.visibility = View.GONE
 
@@ -102,12 +132,155 @@ class MainActivity : AppCompatActivity() {
             }
 
             floatingActionButton.setOnClickListener {
-                bottomSheet2()
+                showInputDialog()
+            }
+
+            eventCalendarNotificationImageView.setOnClickListener {
+                drawerLayout.openDrawer(navView)
+            }
+
+            sideLogoutButton.setOnClickListener {
+                showLogoutConfirmDialog()
+            }
+
+            eventCalendarLogoutImageView.setOnClickListener(View.OnClickListener {
+                showLogoutConfirmDialog()
+            })
+
+            navHeader.findViewById<MaterialTextView>(R.id.notificationMaterialTextView).setOnClickListener {
+                showAcceptConfirmDialog()
+                drawerLayout.closeDrawer(navView)
+            }
+
+            sideInvitationListButton.setOnClickListener {
+                val intent = Intent(this@MainActivity, InvitationActivity::class.java)
+                startActivity(intent)
             }
         }
     }
 
-    fun openLoginActivity() {
+    @SuppressLint("SetTextI18n", "UseCompatLoadingForDrawables")
+    protected fun showInputDialog() {
+        // get prompts.xml view
+        val layoutInflater = LayoutInflater.from(this@MainActivity)
+        val promptView: View = layoutInflater.inflate(R.layout.add_dialog_content, null)
+        val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
+        alertDialogBuilder.setTitle(R.string.dialog_title)
+        alertDialogBuilder.setView(promptView)
+        val inputStartDate = promptView.findViewById<View>(R.id.input_start_date) as TextInputLayout
+        val inputEndDate = promptView.findViewById<View>(R.id.input_end_date) as TextInputLayout
+        val inputMemo = promptView.findViewById<View>(R.id.input_memo) as TextInputLayout
+        inputStartDate.editText?.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                pickDate(inputStartDate.editText!!)
+            }
+        }
+        inputEndDate.editText?.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                pickDate(inputEndDate.editText!!)
+            }
+        }
+        // setup a dialog window
+        alertDialogBuilder.setCancelable(false)
+            .setPositiveButton("OK",
+                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "New memo successfully added.", Toast.LENGTH_SHORT).show() })
+            .setNegativeButton("Cancel",
+                DialogInterface.OnClickListener { dialog, id ->  })
+
+        // create an alert dialog
+        alertDialogBuilder.setCancelable(true)
+        alertDialogBuilder.background = getDrawable(R.drawable.background_rounded)
+        alertDialogBuilder.show()
+    }
+
+    private fun showAcceptConfirmDialog() {
+        val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
+        alertDialogBuilder.setTitle("Accept Invitation")
+        alertDialogBuilder.setMessage("Are you sure you want to invite John Doe?")
+        // setup a dialog window
+        alertDialogBuilder.setCancelable(false)
+            .setPositiveButton("Accept",
+                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "You have invited John Doe.", Toast.LENGTH_SHORT).show() })
+            .setNegativeButton("Decline",
+                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "You have declined John Doe.", Toast.LENGTH_SHORT).show() })
+
+        // create an alert dialog
+        alertDialogBuilder.setCancelable(true)
+        alertDialogBuilder.show()
+    }
+
+    protected fun showLogoutConfirmDialog() {
+        val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
+        alertDialogBuilder.setTitle("Logout")
+        alertDialogBuilder.setMessage("Are you sure you want to log out?")
+        // setup a dialog window
+        alertDialogBuilder.setCancelable(false)
+            .setPositiveButton("Logout",
+                DialogInterface.OnClickListener { dialog, id ->
+                    run {
+
+                        FirebaseAuth.getInstance().signOut()
+                        openLoginActivity()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Successfully logged out!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "You have been logged out.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                })
+            .setNegativeButton("Keep login",
+                DialogInterface.OnClickListener { dialog, id ->  })
+
+        // create an alert dialog
+        alertDialogBuilder.setCancelable(true)
+        alertDialogBuilder.show()
+    }
+
+    private fun pickDate(component: EditText) {
+        val c = Calendar.getInstance()
+        // our day, month and year.
+        val year = c.get(Calendar.YEAR)
+        val month = c.get(Calendar.MONTH)
+        val day = c.get(Calendar.DAY_OF_MONTH)
+        // variable for date picker dialog.
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, year, monthOfYear, dayOfMonth ->
+                // date to our edit text.
+                val dat = ((monthOfYear + 1).toString() + "/" + dayOfMonth + "/" + year)
+                component.setText(dat)
+                pickTime(component, dat)
+            },
+            // and day for the selected date in our date picker.
+            year,
+            month,
+            day
+        )
+        // to display our date picker dialog.
+        datePickerDialog.show()
+    }
+
+    private fun pickTime(component: EditText, date: String) {
+        val c = Calendar.getInstance()
+        val hour = c.get(Calendar.HOUR_OF_DAY)
+        val minute = c.get(Calendar.MINUTE)
+
+        val timePickerDialog = TimePickerDialog(this,
+            OnTimeSetListener { view, hourOfDay, minute ->
+                val formatTime = "$hourOfDay:$minute"
+                val dateTime: String = "$date $formatTime"
+                component.setText(dateTime)
+            }, hour + 1, minute, false
+        )
+        timePickerDialog.show()
+    }
+
+    private fun openLoginActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
         val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
@@ -118,9 +291,9 @@ class MainActivity : AppCompatActivity() {
     private fun bottomSheet(day: Day, eventList: List<Event>) {
         val binding = BottomSheetBinding.inflate(LayoutInflater.from(this))
         val bottomSheetDialog =
-            BottomSheetDialog(this, com.nmd.eventCalendarSample.R.style.BottomSheetDialog)
+            BottomSheetDialog(this, R.style.BottomSheetDialog)
 
-        binding.bottomSheetMaterialTextView.text = day.date + " (" + eventList.size + ")"
+        binding.bottomSheetMaterialTextView.text = day.date + " (" + eventList.size + " memos)"
         binding.bottomSheetNoEventsMaterialTextView.visibility =
             if (eventList.isEmpty()) View.VISIBLE else View.GONE
 
@@ -130,6 +303,9 @@ class MainActivity : AppCompatActivity() {
         bottomSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         bottomSheetDialog.behavior.skipCollapsed = true
         bottomSheetDialog.setCancelable(true)
+        binding.addNewMemoButton.setOnClickListener {
+            showInputDialog()
+        }
 
         bottomSheetDialog.show()
     }
@@ -137,7 +313,7 @@ class MainActivity : AppCompatActivity() {
     private fun bottomSheet2() {
         val binding = BottomSheetSingleWeekBinding.inflate(LayoutInflater.from(this))
         val bottomSheetDialog =
-            BottomSheetDialog(this, com.nmd.eventCalendarSample.R.style.BottomSheetDialog)
+            BottomSheetDialog(this, R.style.BottomSheetDialog)
 
         binding.bottomSheetEventCalendarSingleWeekView.events =
             this@MainActivity.binding.eventCalendarView.events

@@ -15,4 +15,6 @@
     <color name="colorAccent">@color/colorPrimary</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="iron">#DDDEE0</color>
+    <color name="badgeColor">#FF0000</color>
 </resources>

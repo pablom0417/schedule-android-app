@@ -3,4 +3,6 @@
     <color name="colorBackground">#1B1B1F</color>
     <color name="colorIconTint">@color/colorWhite</color>
     <color name="colorStroke">#505154</color>
+    <color name="iron">#DDDEE0</color>
+    <color name="badgeColor">#FF0000</color>
 </resources>

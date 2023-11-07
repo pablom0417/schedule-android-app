@@ -12,4 +12,12 @@
     <string name="already_registered">Already registered?</string>
     <string name="by_signing_up_you_agree_to_our_terms_conditions_and_privacy_policy"><![CDATA[By signing up, you agree to our Terms & Conditions and Privacy Policy]]></string>
     <string name="full_name">Full name</string>
+    <string name="dialog_title">Add meno</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+    <string name="memo">Memo</string>
+    <string name="logout">Log Out</string>
+    <string name="navigation_drawer_open">Open</string>
+    <string name="navigation_drawer_close">Close</string>
+    <string name="request_users">Request Users</string>
 </resources>

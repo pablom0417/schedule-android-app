@@ -49,4 +49,18 @@
         app:drawableStartCompat="@drawable/icon_calendar_alert"
         app:drawableTint="@color/alertStroke" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/addNewMemoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginVertical="8dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="@string/dialog_title"
+        style="@style/Widget.Material3.Button.Icon"
+        app:icon="@android:drawable/ic_menu_add"
+        android:textColor="@color/white" />
+
 </LinearLayout>
