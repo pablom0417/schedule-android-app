@@ -6,6 +6,23 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <LinearLayout
+        android:gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <Switch
+            android:id="@+id/input_mode_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:text="@string/add_memo"
+            android:textColor="@android:color/holo_blue_dark"
+            android:foregroundTint="@android:color/holo_green_dark"
+            android:textSize="20sp"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
+    </LinearLayout>
+
     <RelativeLayout
         android:id="@+id/eventCalendarViewMonthYearHeader"
         android:layout_width="match_parent"
@@ -46,6 +63,14 @@
         android:orientation="horizontal"
         app:divider="@drawable/ecv_divider_vertical"
         app:showDividers="beginning|middle">
+
+        <com.google.android.material.textview.MaterialTextView
+            style="@style/ECV_DayName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="0dp"
+            android:layout_weight="1"
+            android:text="@string/ecv_day_name_sunday" />
 
         <com.google.android.material.textview.MaterialTextView
             style="@style/ECV_DayName"
@@ -95,64 +120,74 @@
             android:layout_weight="1"
             android:text="@string/ecv_day_name_saturday" />
 
-        <com.google.android.material.textview.MaterialTextView
-            style="@style/ECV_DayName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="0dp"
-            android:layout_weight="1"
-            android:text="@string/ecv_day_name_sunday" />
-
     </androidx.appcompat.widget.LinearLayoutCompat>
 
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:weightSum="6">
+        android:layout_height="match_parent">
 
-        <include
-            android:id="@+id/eventCalendarViewRow1"
-            layout="@layout/ecv_include_rows"
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="6">
 
-        <include
-            android:id="@+id/eventCalendarViewRow2"
-            layout="@layout/ecv_include_rows"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <include
+                android:id="@+id/eventCalendarViewRow1"
+                layout="@layout/ecv_include_rows"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-        <include
-            android:id="@+id/eventCalendarViewRow3"
-            layout="@layout/ecv_include_rows"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <include
+                android:id="@+id/eventCalendarViewRow2"
+                layout="@layout/ecv_include_rows"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-        <include
-            android:id="@+id/eventCalendarViewRow4"
-            layout="@layout/ecv_include_rows"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <include
+                android:id="@+id/eventCalendarViewRow3"
+                layout="@layout/ecv_include_rows"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-        <include
-            android:id="@+id/eventCalendarViewRow5"
-            layout="@layout/ecv_include_rows"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <include
+                android:id="@+id/eventCalendarViewRow4"
+                layout="@layout/ecv_include_rows"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-        <include
-            android:id="@+id/eventCalendarViewRow6"
-            layout="@layout/ecv_include_rows"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            <include
+                android:id="@+id/eventCalendarViewRow5"
+                layout="@layout/ecv_include_rows"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
 
-    </androidx.appcompat.widget.LinearLayoutCompat>
+            <include
+                android:id="@+id/eventCalendarViewRow6"
+                layout="@layout/ecv_include_rows"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/floatingActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginRight="16dp"
+            android:layout_marginBottom="60dp"
+            android:src="@drawable/icon_pencil"
+            app:backgroundTint="@android:color/holo_blue_dark"
+            app:rippleColor="@color/ecv_ripple_color"
+            app:tint="@android:color/white" />
+
+    </FrameLayout>
 
 </androidx.appcompat.widget.LinearLayoutCompat>

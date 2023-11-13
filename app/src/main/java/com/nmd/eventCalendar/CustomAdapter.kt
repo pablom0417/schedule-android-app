@@ -52,8 +52,8 @@ class CustomAdapter(private val dataSet: ArrayList<DataModel>, var mContext: Con
             viewHolder.txtName = convertView.findViewById<View>(R.id.name) as TextView
             viewHolder.txtEmail = convertView.findViewById<View>(R.id.email) as TextView
             viewHolder.txtDate = convertView.findViewById<View>(R.id.date) as TextView
-            viewHolder.txtStatus = convertView.findViewById<View>(R.id.status1) as MaterialTextView
-            viewHolder.txtStatus2 = convertView.findViewById<View>(R.id.status2) as MaterialTextView
+//            viewHolder.txtStatus = convertView.findViewById<View>(R.id.status1) as MaterialTextView
+//            viewHolder.txtStatus2 = convertView.findViewById<View>(R.id.status2) as MaterialTextView
             result = convertView
             convertView.tag = viewHolder
         } else {
@@ -61,22 +61,22 @@ class CustomAdapter(private val dataSet: ArrayList<DataModel>, var mContext: Con
             result = convertView
         }
         lastPosition = position
-        if (dataModel!!.status == "invited") {
-            viewHolder.txtStatus!!.visibility = View.VISIBLE
-            viewHolder.txtStatus2!!.visibility = View.GONE
-        } else {
-            viewHolder.txtStatus!!.visibility = View.GONE
-            viewHolder.txtStatus2!!.visibility = View.VISIBLE
-        }
+//        if (dataModel!!.status == "invited") {
+//            viewHolder.txtStatus!!.visibility = View.VISIBLE
+//            viewHolder.txtStatus2!!.visibility = View.GONE
+//        } else {
+//            viewHolder.txtStatus!!.visibility = View.GONE
+//            viewHolder.txtStatus2!!.visibility = View.VISIBLE
+//        }
         viewHolder.txtName!!.text = dataModel!!.name
         viewHolder.txtEmail!!.text = dataModel.email
         viewHolder.txtDate!!.text = dataModel.date
-        viewHolder.txtStatus!!.text = dataModel.status
-        viewHolder.txtStatus2!!.text = dataModel.status
-        viewHolder.txtStatus!!.setOnClickListener(this)
-        viewHolder.txtStatus!!.tag = position
-        viewHolder.txtStatus2!!.setOnClickListener(this)
-        viewHolder.txtStatus2!!.tag = position
+//        viewHolder.txtStatus!!.text = dataModel.status
+//        viewHolder.txtStatus2!!.text = dataModel.status
+//        viewHolder.txtStatus!!.setOnClickListener(this)
+//        viewHolder.txtStatus!!.tag = position
+//        viewHolder.txtStatus2!!.setOnClickListener(this)
+//        viewHolder.txtStatus2!!.tag = position
         // Return the completed view to render on screen
         return convertView!!
     }

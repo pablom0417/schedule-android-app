@@ -16,12 +16,15 @@
         <com.google.android.material.appbar.AppBarLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorBackground"
+            android:background="@color/colorDarkGreen"
             android:fitsSystemWindows="true">
 
             <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
+                app:titleTextColor="@color/white"
+                app:navigationIconTint="@color/white"
+                android:elevation="10dp"
                 android:layout_height="?attr/actionBarSize">
 
                 <LinearLayout
@@ -38,7 +41,18 @@
                         android:padding="16dp"
                         android:src="@android:drawable/stat_notify_chat"
                         android:theme="@style/RippleColor"
-                        app:tint="@color/colorIconTint" />
+                        app:tint="@color/white" />
+                    <TextView
+                        android:layout_width="15dp"
+                        android:layout_height="15dp"
+                        android:text="1"
+                        android:textColor="@color/white"
+                        android:gravity="center"
+                        android:textSize="11sp"
+                        android:background="@drawable/background_rounded"
+                        android:backgroundTint="@color/badgeColor"
+                        android:layout_marginStart="-20dp"
+                        android:layout_marginTop="10dp" />
 
                     <ImageView
                         android:id="@+id/eventCalendarViewCalendarImageView"
@@ -48,7 +62,7 @@
                         android:padding="16dp"
                         android:src="@drawable/icon_calendar_today"
                         android:theme="@style/RippleColor"
-                        app:tint="@color/colorIconTint" />
+                        app:tint="@color/white" />
 
                     <ImageView
                         android:id="@+id/eventCalendarLogoutImageView"
@@ -58,7 +72,7 @@
                         android:padding="16dp"
                         android:src="@drawable/icon_logout"
                         android:theme="@style/RippleColor"
-                        app:tint="@color/colorIconTint" />
+                        app:tint="@color/white" />
 
                 </LinearLayout>
 
@@ -79,12 +93,51 @@
                 app:ecv_count_background_text_color="@android:color/white"
                 app:ecv_count_background_tint_color="@android:color/holo_blue_light"
                 app:ecv_count_visible="true"
-                app:ecv_current_day_background_tint_color="@android:color/holo_red_dark"
+                app:ecv_current_day_background_tint_color="@android:color/holo_blue_bright"
                 app:ecv_current_day_text_color="@android:color/white"
                 app:ecv_disallow_intercept="false"
                 app:ecv_event_item_automatic_text_color="true"
                 app:ecv_event_item_text_color="@color/ecv_black"
                 app:ecv_header_visible="true" />
+            <com.alamkanak.weekview.WeekView
+                android:id="@+id/weekCalendarView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                android:layout_marginTop="60dp"
+                app:adaptiveEventTextSize="true"
+                app:allDayEventTextSize="13sp"
+                app:columnGap="0dp"
+                app:eventCornerRadius="0dp"
+                app:eventPaddingHorizontal="2dp"
+                app:eventMarginVertical="2dp"
+                app:eventPaddingVertical="5dp"
+                app:eventTextSize="8sp"
+                app:headerBottomShadowRadius="4dp"
+                app:headerPadding="0dp"
+                app:headerTextColor="@color/colorCharcoalGray"
+                app:headerTextSize="13sp"
+                app:hourHeight="60dp"
+                app:nowLineDotRadius="5dp"
+                app:nowLineStrokeWidth="2dp"
+                app:numberOfVisibleDays="7"
+                app:overlappingEventGap="1dp"
+                app:showCurrentTimeFirst="true"
+                app:showHeaderBottomShadow="true"
+                app:showNowLine="true"
+                app:showNowLineDot="true"
+                app:showDaySeparator="false"
+                app:showTimeColumnSeparator="true"
+                app:showWeekNumber="true"
+                app:todayBackgroundColor="#ddeeff"
+                app:todayHeaderTextColor="@android:color/holo_blue_dark"
+                app:stickToWeekInWeekView="true"
+                app:timeColumnPadding="16dp"
+                app:timeColumnSeparatorStrokeWidth="1dp"
+                app:timeColumnTextColor="@color/black"
+                app:timeColumnTextSize="12sp"
+                app:weekNumberBackgroundColor="@android:color/holo_orange_dark"
+                app:weekNumberBackgroundCornerRadius="@dimen/corner_radius" />
 
             <ProgressBar
                 android:id="@+id/progressBar"
@@ -92,16 +145,54 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center" />
 
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/floatingActionButton"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@android:color/black" >
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/calendar_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="3"
+                    android:layout_gravity="center|start"
+                    android:gravity="center"
+                    android:text="My Calendar"
+                    android:textColor="@color/ecv_white"
+                    android:textSize="24sp"
+                    />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/back_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="7"
+                    android:layout_gravity="center|end"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:text="Back to mine"
+                    />
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/view_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="16dp"
-                android:src="@drawable/icon_calendar_today_outline"
-                app:backgroundTint="@android:color/holo_blue_dark"
-                app:rippleColor="@color/ecv_ripple_color"
-                app:tint="@color/colorWhite" />
+                android:layout_gravity="top|end"
+                android:textSize="20sp"
+                android:layout_marginStart="20dp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:text="@string/month_view"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
+            <Switch
+                android:id="@+id/add_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:textSize="20sp"
+                android:layout_marginStart="20dp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:visibility="gone"
+                android:text="@string/add_memo"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         </FrameLayout>
 
@@ -118,16 +209,26 @@
         app:itemIconTint="@color/colorCharcoalGray"
         app:itemTextColor="@color/colorCharcoalGray">
 
+        <ListView
+            android:id="@+id/list"
+            android:layout_marginTop="250dp"
+            android:layout_marginBottom="100dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
+            style="?attr/floatingActionButtonTertiaryStyle"
             android:id="@+id/sideInvitationListButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/outline_groups_black_24"
+            android:src="@drawable/icon_calendar_today_outline"
             android:layout_gravity="bottom|start"
             android:layout_margin="50dp"
              />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
+            style="?attr/floatingActionButtonSurfaceStyle"
             android:id="@+id/sideLogoutButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

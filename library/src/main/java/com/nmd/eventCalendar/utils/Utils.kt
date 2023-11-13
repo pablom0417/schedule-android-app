@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.RecyclerView
@@ -45,7 +46,7 @@ class Utils {
                 set(Calendar.DAY_OF_MONTH, 1)
             }
             val numDaysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-            val firstDayOfWeek = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7
+            val firstDayOfWeek = (calendar.get(Calendar.DAY_OF_WEEK) + 6) % 7
             val numEmptyCells = (firstDayOfWeek + 7) % 7
 
             val days = mutableListOf<Day>()
@@ -60,7 +61,7 @@ class Utils {
                     value = dayOfMonth.toString(),
                     isCurrentMonth = false,
                     isCurrentDay = false,
-                    date = String.format("%02d.%02d.%04d", dayOfMonth, prevMonth + 1, prevYear)
+                    date = String.format("%02d/%02d/%04d", prevMonth + 1, dayOfMonth, prevYear)
                 )
             }
             days.addAll(prevMonthDays)
@@ -77,7 +78,7 @@ class Utils {
                     isCurrentMonth = true,
                     isCurrentDay = isCurrentDay,
                     date = String.format(
-                        "%02d.%02d.%04d", dayOfMonth, this@getDaysOfMonthAndGivenYear + 1, year
+                        "%02d/%02d/%04d", this@getDaysOfMonthAndGivenYear + 1, dayOfMonth, year
                     )
                 )
             }
@@ -93,7 +94,7 @@ class Utils {
                     value = dayOfMonth.toString(),
                     isCurrentMonth = false,
                     isCurrentDay = false,
-                    date = String.format("%02d.%02d.%04d", dayOfMonth, nextMonth + 1, nextYear)
+                    date = String.format("%02d/%02d/%04d", nextMonth + 1, dayOfMonth, nextYear)
                 )
             }
             days.addAll(nextMonthDays)
@@ -113,10 +114,10 @@ class Utils {
 
             calendar.set(Calendar.WEEK_OF_YEAR, currentWeek)
             calendar.set(Calendar.YEAR, currentYear)
-            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
 
-            val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-            val currentDate = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date())
+            val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+            val currentDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(Date())
 
             for (i in 0 until 7) {
                 val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
@@ -140,11 +141,11 @@ class Utils {
         @RequiresApi(Build.VERSION_CODES.O)
         fun getDaysForCurrentWeekApi26Impl(): List<Day> {
             val today = LocalDate.now()
-            val startOfWeek = today.with(DayOfWeek.MONDAY)
+            val startOfWeek = today.with(DayOfWeek.SUNDAY)
 
             val days = mutableListOf<Day>()
 
-            val dateFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.getDefault())
+            val dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy", Locale.getDefault())
 
             for (i in 0 until 7) {
                 val currentDate = startOfWeek.plusDays(i.toLong())
