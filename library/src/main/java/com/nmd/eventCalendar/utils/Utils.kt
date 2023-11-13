@@ -46,7 +46,7 @@ class Utils {
                 set(Calendar.DAY_OF_MONTH, 1)
             }
             val numDaysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-            val firstDayOfWeek = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7
+            val firstDayOfWeek = (calendar.get(Calendar.DAY_OF_WEEK) + 6) % 7
             val numEmptyCells = (firstDayOfWeek + 7) % 7
 
             val days = mutableListOf<Day>()
@@ -114,7 +114,7 @@ class Utils {
 
             calendar.set(Calendar.WEEK_OF_YEAR, currentWeek)
             calendar.set(Calendar.YEAR, currentYear)
-            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
 
             val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
             val currentDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).format(Date())
@@ -141,7 +141,7 @@ class Utils {
         @RequiresApi(Build.VERSION_CODES.O)
         fun getDaysForCurrentWeekApi26Impl(): List<Day> {
             val today = LocalDate.now()
-            val startOfWeek = today.with(DayOfWeek.MONDAY)
+            val startOfWeek = today.with(DayOfWeek.SUNDAY)
 
             val days = mutableListOf<Day>()
 

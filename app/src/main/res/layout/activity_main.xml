@@ -99,6 +99,45 @@
                 app:ecv_event_item_automatic_text_color="true"
                 app:ecv_event_item_text_color="@color/ecv_black"
                 app:ecv_header_visible="true" />
+            <com.alamkanak.weekview.WeekView
+                android:id="@+id/weekCalendarView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                android:layout_marginTop="60dp"
+                app:adaptiveEventTextSize="true"
+                app:allDayEventTextSize="13sp"
+                app:columnGap="0dp"
+                app:eventCornerRadius="0dp"
+                app:eventPaddingHorizontal="2dp"
+                app:eventMarginVertical="2dp"
+                app:eventPaddingVertical="5dp"
+                app:eventTextSize="8sp"
+                app:headerBottomShadowRadius="4dp"
+                app:headerPadding="0dp"
+                app:headerTextColor="@color/colorCharcoalGray"
+                app:headerTextSize="13sp"
+                app:hourHeight="60dp"
+                app:nowLineDotRadius="5dp"
+                app:nowLineStrokeWidth="2dp"
+                app:numberOfVisibleDays="7"
+                app:overlappingEventGap="1dp"
+                app:showCurrentTimeFirst="true"
+                app:showHeaderBottomShadow="true"
+                app:showNowLine="true"
+                app:showNowLineDot="true"
+                app:showDaySeparator="false"
+                app:showTimeColumnSeparator="true"
+                app:showWeekNumber="true"
+                app:todayBackgroundColor="#ddeeff"
+                app:todayHeaderTextColor="@android:color/holo_blue_dark"
+                app:stickToWeekInWeekView="true"
+                app:timeColumnPadding="16dp"
+                app:timeColumnSeparatorStrokeWidth="1dp"
+                app:timeColumnTextColor="@color/black"
+                app:timeColumnTextSize="12sp"
+                app:weekNumberBackgroundColor="@android:color/holo_orange_dark"
+                app:weekNumberBackgroundCornerRadius="@dimen/corner_radius" />
 
             <ProgressBar
                 android:id="@+id/progressBar"
@@ -106,16 +145,54 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center" />
 
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/floatingActionButton"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@android:color/black" >
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/calendar_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="3"
+                    android:layout_gravity="center|start"
+                    android:gravity="center"
+                    android:text="My Calendar"
+                    android:textColor="@color/ecv_white"
+                    android:textSize="24sp"
+                    />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/back_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="7"
+                    android:layout_gravity="center|end"
+                    style="@style/Widget.Material3.Button.IconButton.Outlined"
+                    android:text="Back to mine"
+                    />
+            </LinearLayout>
+
+            <Switch
+                android:id="@+id/view_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="16dp"
-                android:src="@drawable/icon_pencil"
-                app:backgroundTint="@android:color/holo_blue_dark"
-                app:rippleColor="@color/ecv_ripple_color"
-                app:tint="@color/colorWhite" />
+                android:layout_gravity="top|end"
+                android:textSize="20sp"
+                android:layout_marginStart="20dp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:text="@string/month_view"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
+            <Switch
+                android:id="@+id/add_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:textSize="20sp"
+                android:layout_marginStart="20dp"
+                android:textColor="@android:color/holo_blue_dark"
+                android:visibility="gone"
+                android:text="@string/add_memo"
+                tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         </FrameLayout>
 
@@ -145,7 +222,7 @@
             android:id="@+id/sideInvitationListButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/outline_groups_black_24"
+            android:src="@drawable/icon_calendar_today_outline"
             android:layout_gravity="bottom|start"
             android:layout_margin="50dp"
              />

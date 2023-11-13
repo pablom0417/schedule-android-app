@@ -9,5 +9,5 @@ data class Event(
     val date: String,
     val name: String,
     val backgroundHexColor: String,
-    val data: @RawValue Any? = null,
+    val file: @RawValue Any? = null,
 ) : Parcelable

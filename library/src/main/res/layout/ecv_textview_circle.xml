@@ -16,6 +16,16 @@
         style="@style/ECV_Day"
         tools:text="1" />
 
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/memo_cell"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="2dp"
+        android:textSize="14sp"
+        android:visibility="gone"
+        android:textColor="@android:color/white" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/eventCalendarViewDayRecyclerView"
         android:layout_width="match_parent"
