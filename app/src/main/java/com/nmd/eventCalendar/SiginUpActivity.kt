@@ -1,5 +1,7 @@
 package com.nmd.eventCalendar
 
+import android.app.Activity
+import android.net.Uri
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
 //import android.app.ProgressDialog
@@ -8,20 +10,27 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.Vibrator
+import android.provider.MediaStore
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.util.Log
 import android.view.MotionEvent
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.storage.FirebaseStorage
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivitySignupBinding
 import java.util.Objects
+import java.util.UUID
 
 class SignUpActivity : AppCompatActivity() {
     companion object {
@@ -42,6 +51,9 @@ class SignUpActivity : AppCompatActivity() {
     private var passwordVisible: Boolean = false
     private val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z.]+"
     private lateinit var mAuth: FirebaseAuth
+    private lateinit var mStorage: FirebaseStorage
+    private val PICK_IMAGE_REQUEST = 1
+    private var avatarImageUri: Uri? = null
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +69,14 @@ class SignUpActivity : AppCompatActivity() {
         name = binding.name
         progressDialog = ProgressDialog(this)
         mAuth = FirebaseAuth.getInstance()
+        mStorage = FirebaseStorage.getInstance()
         login = findViewById(R.id.login)
+        val avatarImageView = findViewById<ImageView>(R.id.avatarImageView)
+
+        avatarImageView.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            startActivityForResult(intent, PICK_IMAGE_REQUEST)
+        }
 
         password1.setOnTouchListener { view, motionEvent ->
             val Right = 2
@@ -87,10 +106,14 @@ class SignUpActivity : AppCompatActivity() {
     private fun performAuth() {
         val email = emailAddress1.text.toString()
         val password = password1.text.toString()
+        val avatarImage = avatarImageUri.toString()
 
         if (!email.matches(emailPattern.toRegex())) {
             Log.d("TAG", "Enter a valid email!")
             emailAddress1.error = "Enter a valid email!"
+        } else if (avatarImage.isNullOrEmpty()) {
+            Log.d("TAG", "Select a user avatar!")
+//            avatarImageUri.error = "Password should contain at least 8 characters!"
         } else if (password.isEmpty() || password.length < 8) {
             Log.d("TAG", "Enter a valid email!")
             password1.error = "Password should contain at least 8 characters!"
@@ -102,6 +125,10 @@ class SignUpActivity : AppCompatActivity() {
 
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val user = mAuth.currentUser
+
+                    uploadAvatarImage(user)
+
                     progressDialog.dismiss()
                     Log.d("TAG", "createUserWithEmail:success")
                     openLoginActivity()
@@ -115,10 +142,42 @@ class SignUpActivity : AppCompatActivity() {
         }
     }
 
+    private fun uploadAvatarImage(user: FirebaseUser?) {
+        if (avatarImageUri != null && user != null) {
+            val storageRef = FirebaseStorage.getInstance().reference.child("avatars/${UUID.randomUUID()}")
+            storageRef.putFile(avatarImageUri!!)
+                .addOnSuccessListener {
+                    storageRef.downloadUrl.addOnSuccessListener { uri ->
+                        val profileUpdates = userProfileChangeRequest {
+                            photoUri = uri
+                        }
+                        user.updateProfile(profileUpdates)
+                    }
+                }
+                .addOnFailureListener {
+
+                }
+        }
+    }
+
     fun openLoginActivity() {
         val intent = Intent(this, LoginActivity::class.java)
         startActivity(intent)
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         vibrator.vibrate(15)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        val avatarImageView = findViewById<ImageView>(R.id.avatarImageView)
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            avatarImageUri = data.data
+
+            Log.d("dd", avatarImageUri.toString());
+            // Set the selected image as preview
+            avatarImageView.setImageURI(avatarImageUri)
+        }
     }
 }

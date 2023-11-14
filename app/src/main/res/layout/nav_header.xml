@@ -8,11 +8,13 @@
     android:gravity="center"
     android:orientation="vertical">
 
-    <ImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/imageviewProfileImage"
         android:layout_width="80dp"
         android:layout_height="80dp"
         android:layout_gravity="center"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/Circular"
         android:src="@drawable/avatar" />
 
     <TextView
