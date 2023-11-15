@@ -39,9 +39,9 @@ fun CalendarEntity.toWeekViewEntity(): WeekViewEntity {
 }
 
 fun CalendarEntity.Event.toWeekViewEntity(): WeekViewEntity {
-    val backgroundColor = if (!isCanceled) color else Color.WHITE
-    val textColor = if (!isCanceled) Color.WHITE else color
-    val borderWidthResId = if (!isCanceled) R.dimen.no_border_width else R.dimen.border_width
+    val backgroundColor = if (location.split(" ")[0] != "memo") color else Color.WHITE
+    val textColor = if (location.split(" ")[0] != "memo") Color.WHITE else color
+    val borderWidthResId = if (location.split(" ")[0] != "memo") R.dimen.no_border_width else R.dimen.border_width
 
     val style = WeekViewEntity.Style.Builder()
         .setTextColor(textColor)
@@ -64,7 +64,7 @@ fun CalendarEntity.Event.toWeekViewEntity(): WeekViewEntity {
         }
     }
 
-    var type = "- S -"
+    var type = ""
     if (location.split(" ")[0] == "memo") type = "- M -"
 
     return WeekViewEntity.Event.Builder(this)

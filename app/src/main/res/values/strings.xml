@@ -23,4 +23,6 @@
     <string name="month_view">Monthly View</string>
     <string name="end_time">End Time</string>
     <string name="start_time">Start Time</string>
+    <string name="my_calendar">My Calendar</string>
+    <string name="back_to_mine">Back to mine</string>
 </resources>

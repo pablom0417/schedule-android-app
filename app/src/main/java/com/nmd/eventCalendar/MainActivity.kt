@@ -32,14 +32,12 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.storage.Acl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.google.firebase.database.ktx.database
@@ -52,9 +50,7 @@ import com.nmd.eventCalendar.model.Day
 import com.nmd.eventCalendar.model.Event
 import com.nmd.eventCalendar.model.User
 import com.nmd.eventCalendar.util.GenericAction
-import com.nmd.eventCalendar.util.defaultDateTimeFormatter
 import com.nmd.eventCalendar.util.genericViewModel
-import com.nmd.eventCalendar.util.showToast
 import com.nmd.eventCalendar.util.subscribeToEvents
 import com.nmd.eventCalendar.util.yearMonthsBetween
 import com.nmd.eventCalendarSample.R
@@ -93,29 +89,21 @@ open class MainActivity : BaseActivity() {
     var logoutButton: ImageView? = null
     var fullName: TextView? = null
     var firebaseAuth: FirebaseAuth? = null
-    public var user: FirebaseUser? = null
+    var user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
     private val authStateListener: AuthStateListener? = null
 
-    var firebaseDatabase = Firebase.database.reference
+    private var firebaseDatabase = Firebase.database.reference
     var memoDatabaseReference = firebaseDatabase.child("memos")
     var scheduleDatabaseReference = firebaseDatabase.child("schedules")
     var userDatabaseReference = firebaseDatabase.child("users")
     var memo: Event? = null
-    var schedule: Event? = null
+    var email: String? = user?.email
     var schedules: ArrayList<Event> = ArrayList()
 
     private val viewModel by genericViewModel()
 
-    var dataModels: ArrayList<DataModel>? = null
+    var dataModels: ArrayList<User>? = null
     private var adapter: CustomAdapter? = null
-
-
-    private val weekViewAdapter: BasicActivityWeekViewAdapter by lazy {
-        BasicActivityWeekViewAdapter(
-            eventClickHandler = this::showInputDialog,
-            loadMoreHandler = viewModel::fetchEvents,
-        )
-    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val weekdayFormatter = DateTimeFormatter.ofPattern("E", Locale.getDefault())
@@ -137,8 +125,24 @@ open class MainActivity : BaseActivity() {
     @SuppressLint("InflateParams", "SetTextI18n")
     private fun initialize() {
         with(binding) {
+            val weekViewAdapter: BasicActivityWeekViewAdapter by lazy {
+                BasicActivityWeekViewAdapter(
+                    eventClickHandler = this@MainActivity::showInputDialog,
+                    loadMoreHandler = viewModel::fetchEvents,
+                )
+            }
             progressBar.visibility = View.VISIBLE
             eventCalendarView.visibility = View.GONE
+            switchLayout.visibility = View.GONE
+            backButton.visibility = View.INVISIBLE
+            floatingActionButton.visibility = View.VISIBLE
+            calendarStatus.text = "My Calendar"
+            drawerLayout.closeDrawer(navView)
+            if (email != user?.email) {
+                calendarStatus.text = "${email}'s Calendar"
+                backButton.visibility = View.VISIBLE
+                floatingActionButton.visibility = View.GONE
+            }
 
             val toggle = ActionBarDrawerToggle(
                 this@MainActivity,
@@ -153,9 +157,10 @@ open class MainActivity : BaseActivity() {
 
             val navHeader: View = navView.getHeaderView(0)
             val username = navHeader.findViewById(R.id.textViewUserName) as TextView
+            val useremail = navHeader.findViewById(R.id.textViewUserEmail) as TextView
             val imageviewProfileImage = navHeader.findViewById(R.id.imageviewProfileImage) as ImageView
 
-            val avatarImageUri = mPrefs?.avatarUrl
+            val avatarImageUri = user?.photoUrl.toString()
             if (avatarImageUri != "") {
                 Picasso.get().load(avatarImageUri).into(imageviewProfileImage, object : Callback {
                     override fun onSuccess() {
@@ -177,23 +182,24 @@ open class MainActivity : BaseActivity() {
             }
 
 
-            user = FirebaseAuth.getInstance().currentUser
             if (user != null) {
                 username.text = user?.displayName
+                useremail.text = user?.email
             }
 
             val year = Calendar.getInstance().get(Calendar.YEAR)
 
-            loadList {
+            loadList(email!!) {
                 eventCalendarView.events = it
                 Log.d("event-list", eventCalendarView.events.toString())
                 eventCalendarView.post {
                     progressBar.visibility = View.GONE
+                    switchLayout.visibility = View.VISIBLE
                     if (isWeekView) weekCalendarView.visibility = View.VISIBLE else eventCalendarView.visibility = View.VISIBLE
                 }
             }
 
-            loadSchedule {
+            loadSchedule(email!!) {
                 schedules = it
             }
 
@@ -228,11 +234,24 @@ open class MainActivity : BaseActivity() {
             eventCalendarViewCalendarImageView.setOnClickListener {
                 eventCalendarView.scrollToCurrentMonth(false)
             }
-            backButton.visibility = View.INVISIBLE
 
             backButton.setOnClickListener {
-                calendarStatus.text = "My Calendar"
-                backButton.visibility = View.INVISIBLE
+                email = user?.email
+                initialize()
+//                loadList(email!!) {
+//                    eventCalendarView.events = it
+//                    drawerLayout.closeDrawer(binding.navView)
+//                    calendarStatus.text = "My calendar"
+//                    backButton.visibility = View.INVISIBLE
+//                    weekCalendarView.visibility = View.GONE
+//                    eventCalendarView.visibility = View.VISIBLE
+//                    floatingActionButton.visibility = View.VISIBLE
+//                    isScheduleMode = false
+//                    isWeekView = false
+//                    viewSwitch.isChecked = false
+//                    addSwitch.isChecked = false
+//                    Toast.makeText(this@MainActivity, "You have came back to your calendar.", Toast.LENGTH_LONG).show()
+//                }
             }
 
             viewSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -246,7 +265,7 @@ open class MainActivity : BaseActivity() {
                     eventCalendarView.visibility = View.VISIBLE
                     weekCalendarView.visibility = View.GONE
                     addSwitch.visibility = View.VISIBLE
-                    floatingActionButton.visibility = View.VISIBLE
+                    if (email == user?.email) floatingActionButton.visibility = View.VISIBLE
                     viewSwitch.text = "Monthly View"
                 }
                 isWeekView = isChecked
@@ -255,7 +274,7 @@ open class MainActivity : BaseActivity() {
                 weekCalendarView.visibility = View.GONE
                 eventCalendarView.visibility = View.GONE
                 if (isChk) {
-                    loadSchedule {
+                    loadSchedule(email!!) {
                         eventCalendarView.events = it
                         addSwitch.text = "Add schedule"
                         eventCalendarView.post {
@@ -264,7 +283,7 @@ open class MainActivity : BaseActivity() {
                         }
                     }
                 } else {
-                    loadList {
+                    loadList(email!!) {
                         eventCalendarView.events = it
                         addSwitch.text = "Add memo"
                         eventCalendarView.post {
@@ -318,29 +337,18 @@ open class MainActivity : BaseActivity() {
                 showLogoutConfirmDialog()
             })
 
-//            Log.d("all-users-list", Firebase)
+            dataModels = arrayListOf()
+            userDatabaseReference.get().addOnSuccessListener {
+                for (snapshot in it.children) {
+                    val item = snapshot.getValue<User>()!!
+                    if (item.email != user?.email) dataModels!!.add(snapshot.getValue<User>()!!)
+                }
 
-            dataModels = ArrayList()
-
-//            userDatabaseReference.get().addOnSuccessListener {
-//                for (snapshot in it.children) {
-//                    dataModels
-//                }
-//            }
-
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-
-            adapter = CustomAdapter(dataModels!!, applicationContext)
-
-            list.adapter = adapter
+                adapter = CustomAdapter(dataModels!!, applicationContext)
+                list.adapter = adapter
+            }
             list.setOnItemClickListener { parent, view, position, id ->
-                val dataModel: DataModel = dataModels!![position]
+                val dataModel: User = dataModels!![position]
                 showAcceptConfirmDialog(dataModel)
             }
 
@@ -439,7 +447,7 @@ open class MainActivity : BaseActivity() {
                     if (event?.id == null) {
                         if (isScheduleMode) {
                             scheduleDatabaseReference.push().setValue(memo).addOnSuccessListener{
-                                loadSchedule {
+                                loadSchedule(email!!) {
                                     binding.eventCalendarView.events = it
                                     binding.progressBar.visibility = View.GONE
                                     if (isWeekView) binding.weekCalendarView.visibility = View.VISIBLE else binding.eventCalendarView.visibility = View.VISIBLE
@@ -538,7 +546,7 @@ open class MainActivity : BaseActivity() {
                                     it.startDate!! <= memo!!.startDate!! && it.endDate!! >= memo!!.endDate!! && it.startTime!! <= memo!!.startTime!! && it.endTime!! >= memo!!.endTime!!
                                 }) {
                                 memoDatabaseReference.push().setValue(memo).addOnSuccessListener{
-                                    loadList {
+                                    loadList(email!!) {
                                         binding.eventCalendarView.events = it
                                         binding.progressBar.visibility = View.GONE
                                         binding.eventCalendarView.visibility = View.VISIBLE
@@ -563,7 +571,7 @@ open class MainActivity : BaseActivity() {
                     } else {
                         if (isScheduleMode) {
                             scheduleDatabaseReference.child(event.id!!).setValue(memo).addOnSuccessListener {
-                                loadSchedule {
+                                loadSchedule(email!!) {
                                     binding.eventCalendarView.events = it
                                     binding.progressBar.visibility = View.GONE
                                     if (isWeekView) binding.weekCalendarView.visibility = View.VISIBLE else binding.eventCalendarView.visibility = View.VISIBLE
@@ -586,7 +594,7 @@ open class MainActivity : BaseActivity() {
                                     it.startDate!! <= memo!!.startDate!! && it.endDate!! >= memo!!.endDate!! && it.startTime!! <= memo!!.startTime!! && it.endTime!! >= memo!!.endTime!!
                                 }) {
                                 memoDatabaseReference.child(event.id!!).setValue(memo).addOnSuccessListener {
-                                    loadList {
+                                    loadList(email!!) {
                                         binding.eventCalendarView.events = it
                                         binding.progressBar.visibility = View.GONE
                                         if (isWeekView) binding.weekCalendarView.visibility = View.VISIBLE else binding.eventCalendarView.visibility = View.VISIBLE
@@ -658,25 +666,37 @@ open class MainActivity : BaseActivity() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun showAcceptConfirmDialog(dataModel: DataModel) {
+    private fun showAcceptConfirmDialog(dataModel: User) {
         val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
         alertDialogBuilder.setTitle("View others' calendar")
-        alertDialogBuilder.setMessage("Do you really want to see ${dataModel.name}'s calendar?")
+        alertDialogBuilder.setMessage("Do you really want to see ${dataModel.displayName}'s calendar?")
         // setup a dialog window
         alertDialogBuilder.setCancelable(false)
-            .setPositiveButton("Yes",
-                DialogInterface.OnClickListener { dialog, id ->
-                    binding.drawerLayout.closeDrawer(binding.navView)
-                    binding.calendarStatus.text = "${dataModel.name}'s calendar"
-                    binding.backButton.visibility = View.VISIBLE
-                    binding.weekCalendarView.visibility = View.GONE
-                    binding.eventCalendarView.visibility = View.VISIBLE
-                    isScheduleMode = false
-                    binding.viewSwitch.isChecked = false
-                    Toast.makeText(this@MainActivity, "You are seeing ${dataModel.name}'s calendar now.", Toast.LENGTH_SHORT).show()
-                })
-            .setNegativeButton("No",
-                DialogInterface.OnClickListener { dialog, id ->  })
+            .setPositiveButton("Yes"
+            ) { _, _ ->
+                email = dataModel.email
+                initialize()
+//                loadList(email!!) {
+//                    binding.eventCalendarView.events = it
+//                    binding.drawerLayout.closeDrawer(binding.navView)
+//                    binding.calendarStatus.text = "${dataModel.displayName}'s calendar"
+//                    binding.backButton.visibility = View.VISIBLE
+//                    binding.weekCalendarView.visibility = View.GONE
+//                    binding.eventCalendarView.visibility = View.VISIBLE
+//                    binding.floatingActionButton.visibility = View.GONE
+//                    isScheduleMode = false
+//                    isWeekView = false
+//                    binding.viewSwitch.isChecked = false
+//                    binding.addSwitch.isChecked = false
+//                }
+                Toast.makeText(
+                    this@MainActivity,
+                    "You are seeing ${dataModel.displayName}'s calendar now.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            .setNegativeButton("No"
+            ) { _, _ -> }
 
         // create an alert dialog
         alertDialogBuilder.setCancelable(true)
@@ -727,7 +747,7 @@ open class MainActivity : BaseActivity() {
                 binding.eventCalendarView.events = ArrayList()
                 if (isScheduleMode) {
                     scheduleDatabaseReference.child(id).removeValue().addOnSuccessListener {
-                        loadSchedule {
+                        loadSchedule(email!!) {
                             binding.eventCalendarView.events = it
                             binding.progressBar.visibility = View.GONE
                             binding.eventCalendarView.visibility = View.VISIBLE
@@ -746,7 +766,7 @@ open class MainActivity : BaseActivity() {
                     }
                 } else {
                     memoDatabaseReference.child(id).removeValue().addOnSuccessListener {
-                        loadList {
+                        loadList(email!!) {
                             binding.eventCalendarView.events = it
                             binding.progressBar.visibility = View.GONE
                             binding.eventCalendarView.visibility = View.VISIBLE
@@ -842,8 +862,7 @@ open class MainActivity : BaseActivity() {
     @SuppressLint("SetTextI18n")
     private fun bottomSheet(day: Day, eventList: List<Event>) {
         val binding = BottomSheetBinding.inflate(LayoutInflater.from(this))
-        val bottomSheetDialog =
-            BottomSheetDialog(this, R.style.BottomSheetDialog)
+        val bottomSheetDialog = BottomSheetDialog(this, R.style.BottomSheetDialog)
         val size = eventList.size
         var sheetHeaderText = ""
         sheetHeaderText = if (size == 0) {
@@ -856,6 +875,7 @@ open class MainActivity : BaseActivity() {
             }
         }
 
+        if (email != user?.email) binding.addNewMemoButton.visibility = View.GONE
         binding.bottomSheetMaterialTextView.text = sheetHeaderText
         binding.bottomSheetNoEventsMaterialTextView.visibility =
             if (eventList.isEmpty()) View.VISIBLE else View.GONE
@@ -866,14 +886,16 @@ open class MainActivity : BaseActivity() {
         sheetEventsAdapter.setOnClickListener(object :
             SheetEventsAdapter.OnClickListener {
             override fun onClick(position: Int, model: Event) {
-                showInputDialog(model)
-                bottomSheetDialog.cancel()
+                if (email == user?.email) {
+                    showInputDialog(model)
+                    bottomSheetDialog.cancel()
+                }
             }
         })
 
         sheetEventsAdapter.setOnLongClickListener(object : SheetEventsAdapter.OnLongClickListener {
             override fun onLongClick(position: Int, model: Event) {
-                if (model.id != null) {
+                if (model.id != null && email == user?.email) {
                     showDeleteConfirmButton(model.id!!)
                     bottomSheetDialog.cancel()
                 }
@@ -893,7 +915,7 @@ open class MainActivity : BaseActivity() {
         bottomSheetDialog.show()
     }
 
-    private fun loadList(callback: (ArrayList<Event>) -> Unit) {
+    private fun loadList(email: String, callback: (ArrayList<Event>) -> Unit) {
         val eventList = arrayListOf<Event>()
         memoDatabaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -901,7 +923,7 @@ open class MainActivity : BaseActivity() {
                 for (postSnapshot in children) {
                     val event = postSnapshot.getValue<Event>()!!
                     event.id = postSnapshot.key!!
-                    if (event.email == user?.email) eventList.add(event)
+                    if (event.email == email) eventList.add(event)
                 }
                 Log.d("initial-memos", eventList.toString())
                 callback(eventList)
@@ -913,7 +935,7 @@ open class MainActivity : BaseActivity() {
         })
     }
 
-    private fun loadSchedule(callback: (ArrayList<Event>) -> Unit) {
+    private fun loadSchedule(email: String, callback: (ArrayList<Event>) -> Unit) {
         val eventList = arrayListOf<Event>()
         scheduleDatabaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -921,7 +943,7 @@ open class MainActivity : BaseActivity() {
                 for (postSnapshot in children) {
                     var event = postSnapshot.getValue<Event>()!!
                     event.id = postSnapshot.key!!
-                    if (event.email == user?.email) eventList.add(event)
+                    if (event.email == email) eventList.add(event)
                 }
                 Log.d("initial-memos", eventList.toString())
                 callback(eventList)
@@ -935,7 +957,7 @@ open class MainActivity : BaseActivity() {
 
     inner class BasicActivityWeekViewAdapter(
         private val eventClickHandler: (Event?) -> Unit,
-        private val loadMoreHandler: (Boolean, List<YearMonth>) -> Unit
+        private val loadMoreHandler: (String, Boolean, List<YearMonth>) -> Unit
     ) : WeekViewPagingAdapterJsr310<CalendarEntity>() {
         override fun onCreateEntity(item: CalendarEntity): WeekViewEntity = item.toWeekViewEntity()
 
@@ -987,7 +1009,7 @@ open class MainActivity : BaseActivity() {
         }
 
         override fun onLoadMore(startDate: LocalDate, endDate: LocalDate) {
-            loadMoreHandler(isScheduleMode, yearMonthsBetween(startDate, endDate))
+            loadMoreHandler(email!!, isScheduleMode, yearMonthsBetween(startDate, endDate))
         }
 
         override fun onVerticalScrollPositionChanged(currentOffset: Float, distance: Float) {

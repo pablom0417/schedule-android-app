@@ -38,8 +38,8 @@ class GenericViewModel(
     private val currentEntities: List<CalendarEntity>
         get() = _viewState.value?.entities.orEmpty()
 
-    fun fetchEvents(isSchedule: Boolean, yearMonths: List<YearMonth>) {
-        eventsRepository.fetch(yearMonths = yearMonths) { entities ->
+    fun fetchEvents(email: String, isSchedule: Boolean, yearMonths: List<YearMonth>) {
+        eventsRepository.fetch(email = email, yearMonths = yearMonths) { entities ->
             val existingEntities = _viewState.value?.entities.orEmpty()
             Log.d("existingEntities", entities.toString())
             _viewState.value = GenericViewState(entities = entities)

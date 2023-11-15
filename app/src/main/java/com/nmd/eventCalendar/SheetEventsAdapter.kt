@@ -35,7 +35,7 @@ class SheetEventsAdapter(private var list: ArrayList<Event>) :
             val item = list[position]
             binding.itemEventMaterialTextView.text =
                 if (item.startDate == item.endDate) "${item.name} - ${item.startDate} ${item.startTime}~${item.endTime}"
-                else "${item.name} - ${item.startDate} ~ ${item.endDate} ${item.startTime}~${item.endTime}"
+                else "${item.name} - ${item.startDate}~${item.endDate} ${item.startTime}~${item.endTime}"
 
             val color = Color.parseColor(item.backgroundHexColor)
             binding.itemEventMaterialTextView.setTextColor(

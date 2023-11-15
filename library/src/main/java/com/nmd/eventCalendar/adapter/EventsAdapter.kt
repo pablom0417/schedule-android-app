@@ -46,7 +46,7 @@ class EventsAdapter(
                 setTextColor(
                     ContextCompat.getColor(
                         context,
-                        if (color.isDarkColor()) R.color.ecv_white else R.color.ecv_charcoal_color
+                        if (color.isDarkColor()) R.color.ecv_white else R.color.ecv_black
                     )
                 )
             } else {

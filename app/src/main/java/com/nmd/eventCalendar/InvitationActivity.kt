@@ -42,30 +42,30 @@ open class InvitationActivity : AppCompatActivity() {
     @SuppressLint("InflateParams", "SetTextI18n")
     private fun initialize() {
         with(binding) {
-            dataModels = ArrayList()
-
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
-
-            adapter = CustomAdapter(dataModels!!, applicationContext)
-
-            list.setAdapter(adapter)
-            list.setOnItemClickListener(OnItemClickListener { parent, view, position, id ->
-                val dataModel: DataModel = dataModels!![position]
-                showAcceptConfirmDialog(dataModel)
-            })
-            eventCalendarLogoutImageView.setOnClickListener(View.OnClickListener {
-                showLogoutConfirmDialog()
-            })
-            eventCalendarGotoCalendarImageView.setOnClickListener {
-                val intent = Intent(this@InvitationActivity, MainActivity::class.java)
-                startActivity(intent)
-            }
+//            dataModels = ArrayList()
+//
+//            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+//            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
+//            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+//            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+//            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "pending"))
+//            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+//            dataModels!!.add(DataModel("John Doe", "johndoe@example.com", "Oct 23, 2023", "invited"))
+//
+//            adapter = CustomAdapter(dataModels!!, applicationContext)
+//
+//            list.setAdapter(adapter)
+//            list.setOnItemClickListener(OnItemClickListener { parent, view, position, id ->
+//                val dataModel: DataModel = dataModels!![position]
+//                showAcceptConfirmDialog(dataModel)
+//            })
+//            eventCalendarLogoutImageView.setOnClickListener(View.OnClickListener {
+//                showLogoutConfirmDialog()
+//            })
+//            eventCalendarGotoCalendarImageView.setOnClickListener {
+//                val intent = Intent(this@InvitationActivity, MainActivity::class.java)
+//                startActivity(intent)
+//            }
         }
     }
 

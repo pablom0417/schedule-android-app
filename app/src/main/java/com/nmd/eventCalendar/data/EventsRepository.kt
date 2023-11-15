@@ -43,6 +43,7 @@ class EventsRepository(private val context: Context) {
     private val gson = Gson()
 
     fun fetch(
+        email: String,
         yearMonths: List<YearMonth>,
         onSuccess: (List<CalendarEntity>) -> Unit
     ) {
@@ -61,7 +62,7 @@ class EventsRepository(private val context: Context) {
                 for (postSnapshot in children) {
                     var event = postSnapshot.getValue<Event>()!!
                     event.id = postSnapshot.key!!
-                    if (event.email == user?.email) {
+                    if (event.email == email) {
                         if (event.startDate != event.endDate) {
                             val formatter = SimpleDateFormat("MM/dd/yyyy")
                             var start: Date? = formatter.parse(event.startDate!!)
@@ -71,14 +72,30 @@ class EventsRepository(private val context: Context) {
                                     val calendar: Calendar = Calendar.getInstance()
                                     calendar.time = start
                                     val startDate = String.format("%02d/%02d/%04d", calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR))
-                                    val tempEvent = Event(event.email, startDate, startDate, event.startTime, event.endTime, event.name + "|schedule " + event.id, event.backgroundHexColor, event.id)
+                                    val tempEvent = Event(
+                                        event.email,
+                                        startDate,
+                                        startDate,
+                                        event.startTime,
+                                        event.endTime,
+                                        event.name + "|schedule " + event.id,
+                                        event.backgroundHexColor, event.id
+                                    )
                                     eventList.add(tempEvent)
                                     calendar.add(Calendar.DATE, 1)
                                     start = calendar.time
                                 }
                             }
                         } else {
-                            val tempEvent = Event(event.email, event.startDate, event.endDate, event.startTime, event.endTime, event.name + "|schedule " + event.id, event.backgroundHexColor, event.id)
+                            val tempEvent = Event(
+                                event.email,
+                                event.startDate,
+                                event.endDate,
+                                event.startTime,
+                                event.endTime, event.name + "|schedule " + event.id,
+                                event.backgroundHexColor,
+                                event.id
+                            )
                             eventList.add(tempEvent)
                         }
                     }
@@ -92,7 +109,7 @@ class EventsRepository(private val context: Context) {
                         for (postSnapshot in children) {
                             var event = postSnapshot.getValue<Event>()!!
                             event.id = postSnapshot.key!!
-                            if (event.email == user?.email) {
+                            if (event.email == email) {
                                 if (event.startDate != event.endDate) {
                                     val formatter = SimpleDateFormat("MM/dd/yyyy")
                                     var start: Date? = formatter.parse(event.startDate!!)
@@ -102,14 +119,24 @@ class EventsRepository(private val context: Context) {
                                             val calendar: Calendar = Calendar.getInstance()
                                             calendar.time = start
                                             val startDate = String.format("%02d/%02d/%04d", calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.YEAR))
-                                            val tempEvent = Event(event.email, startDate, startDate, event.startTime, event.endTime, event.name + "|memo " + event.id, event.backgroundHexColor, event.id)
+                                            val tempEvent = Event(
+                                                event.email, startDate,
+                                                startDate, event.startTime,
+                                                event.endTime, event.name + "|memo " + event.id,
+                                                event.backgroundHexColor, event.id
+                                            )
                                             eventList.add(tempEvent)
                                             calendar.add(Calendar.DATE, 1)
                                             start = calendar.time
                                         }
                                     }
                                 } else {
-                                    val tempEvent = Event(event.email, event.startDate, event.endDate, event.startTime, event.endTime, event.name + "|memo " + event.id, event.backgroundHexColor, event.id)
+                                    val tempEvent = Event(
+                                        event.email, event.startDate,
+                                        event.endDate, event.startTime,
+                                        event.endTime, event.name + "|memo " + event.id,
+                                        event.backgroundHexColor, event.id
+                                    )
                                     eventList.add(tempEvent)
                                 }
                             }
@@ -144,11 +171,6 @@ class EventsRepository(private val context: Context) {
     }
 
     private fun fetchEvents(): List<ApiResult> {
-        val events: ArrayList<ApiResult> = arrayListOf()
-        loadSchedule {
-            val str = gson.toJson(it);
-            Log.d("str-str", str)
-        }
         val inputStream = context.assets.open("events.json")
         val json = inputStream.reader().readText()
         return gson.fromJson(json, eventResponseType)

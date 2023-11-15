@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="center"
-    android:layout_marginTop="70dp"
+    android:layout_marginTop="60dp"
     android:gravity="center"
     android:orientation="vertical">
 
@@ -25,7 +25,15 @@
         android:layout_marginTop="12dp"
         android:textAlignment="center"
         android:textColor="@color/black"
-        android:textSize="16sp" />
+        android:textSize="18sp" />
+    <TextView
+        android:id="@+id/textViewUserEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="14sp" />
 
     <LinearLayout
         android:id="@+id/relativeLayoutCarPlate"
@@ -33,13 +41,12 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_marginTop="14dp"
-        android:layout_marginBottom="50dp">
+        android:layout_marginBottom="10dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginTop="12dp"
             android:text="@string/request_users"
             android:textAlignment="center"
             android:textColor="@color/black"
