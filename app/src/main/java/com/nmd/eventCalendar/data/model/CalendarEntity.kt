@@ -64,12 +64,15 @@ fun CalendarEntity.Event.toWeekViewEntity(): WeekViewEntity {
         }
     }
 
+    var type = "- S -"
+    if (location.split(" ")[0] == "memo") type = "- M -"
+
     return WeekViewEntity.Event.Builder(this)
         .setId(id)
         .setTitle(title)
         .setStartTime(startTime)
         .setEndTime(endTime)
-        .setSubtitle(subtitle)
+        .setSubtitle(type)
         .setAllDay(isAllDay)
         .setStyle(style)
         .build()

@@ -9,9 +9,10 @@ import java.time.DateTimeException
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
 interface ApiResult {
-    fun toCalendarEntity(yearMonth: YearMonth, index: Int): CalendarEntity?
+    fun toCalendarEntity(yearMonth: YearMonth, index: Int, type: String): CalendarEntity?
 }
 
 data class ApiEvent(
@@ -19,23 +20,26 @@ data class ApiEvent(
     @SerializedName("startDate") val startDate: String,
     @SerializedName("endDate") val endDate: String,
     @SerializedName("startTime") val startTime: String,
-    @SerializedName("endTime") val endTime: Int,
+    @SerializedName("endTime") val endTime: String,
     @SerializedName("backgroundHexColor") val backgroundHexColor: String,
 ) : ApiResult {
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun toCalendarEntity(yearMonth: YearMonth, index: Int): CalendarEntity? {
+    override fun toCalendarEntity(yearMonth: YearMonth, index: Int, type: String): CalendarEntity? {
+        val formatter: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm")
+        val startDateTime = LocalDateTime.parse("$startDate $startTime", formatter)
+        val endDateTime = LocalDateTime.parse("$endDate $endTime", formatter)
         return try {
-            val startDateTime = LocalDateTime.parse("$startDate $startTime")
-            val endDateTime = LocalDateTime.parse("$endDate $endTime")
+            Log.d("start-end", LocalDateTime.parse("$startDate $startTime", formatter).toString())
             CalendarEntity.Event(
                 id = "100${yearMonth.year}00${yearMonth.monthValue}00$index".toLong(),
-                title = name,
-                location = "",
+                title = name.split("|")[0],
+                location = name.split("|")[1],
                 startTime = startDateTime,
                 endTime = endDateTime,
                 color = Color.parseColor(backgroundHexColor),
-                isAllDay = startDate != endDate,
+                isAllDay = false,
                 isCanceled = false
             )
         } catch (e: DateTimeException) {
@@ -51,7 +55,7 @@ data class ApiBlockedTime(
 ) : ApiResult {
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun toCalendarEntity(yearMonth: YearMonth, index: Int): CalendarEntity? {
+    override fun toCalendarEntity(yearMonth: YearMonth, index: Int, type: String): CalendarEntity? {
         return try {
             val startTime = LocalTime.parse(startTime)
             val startDateTime = yearMonth.atDay(dayOfMonth).atTime(startTime)

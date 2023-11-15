@@ -113,11 +113,11 @@
                 app:eventPaddingHorizontal="2dp"
                 app:eventMarginVertical="2dp"
                 app:eventPaddingVertical="5dp"
-                app:eventTextSize="8sp"
+                app:eventTextSize="10sp"
                 app:headerBottomShadowRadius="4dp"
                 app:headerPadding="0dp"
                 app:headerTextColor="@color/black"
-                app:headerTextSize="10sp"
+                app:headerTextSize="12sp"
                 app:hourHeight="60dp"
                 app:nowLineDotRadius="5dp"
                 app:nowLineStrokeWidth="2dp"
@@ -136,7 +136,7 @@
                 app:timeColumnPadding="4dp"
                 app:timeColumnSeparatorStrokeWidth="1dp"
                 app:timeColumnTextColor="@color/black"
-                app:timeColumnTextSize="10sp"
+                app:timeColumnTextSize="12sp"
                 app:weekNumberBackgroundColor="@android:color/holo_orange_dark"
                 app:weekNumberBackgroundCornerRadius="@dimen/corner_radius" />
 
