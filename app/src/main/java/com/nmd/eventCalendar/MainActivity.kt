@@ -11,6 +11,7 @@ import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
 import android.os.Vibrator
 import android.util.Log
 import android.view.LayoutInflater
@@ -30,22 +31,26 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.storage.Acl
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
-import com.jakewharton.threetenabp.AndroidThreeTen
 import com.nmd.eventCalendar.data.model.CalendarEntity
 import com.nmd.eventCalendar.data.model.toWeekViewEntity
 import com.nmd.eventCalendar.`interface`.EventCalendarDayClickListener
 import com.nmd.eventCalendar.`interface`.EventCalendarScrollListener
 import com.nmd.eventCalendar.model.Day
 import com.nmd.eventCalendar.model.Event
+import com.nmd.eventCalendar.model.User
 import com.nmd.eventCalendar.util.GenericAction
 import com.nmd.eventCalendar.util.defaultDateTimeFormatter
 import com.nmd.eventCalendar.util.genericViewModel
@@ -58,6 +63,9 @@ import com.nmd.eventCalendarSample.databinding.BottomSheetBinding
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import java.io.ByteArrayOutputStream
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -65,6 +73,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 open class MainActivity : BaseActivity() {
@@ -118,7 +127,7 @@ open class MainActivity : BaseActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
-        AndroidThreeTen.init(this)
+//        AndroidThreeTen.init(this)
 
         initialize()
     }
@@ -433,6 +442,82 @@ open class MainActivity : BaseActivity() {
                                         Toast.LENGTH_SHORT
                                     ).show()
                                     alertDialogBuilder.dismiss()
+
+                                    // Get bearer token
+                                    val serviceAccountKeyPath = "firebase.json"
+                                    // Load the service account key file
+                                    val credentials = GoogleCredentials.fromStream(assets.open(serviceAccountKeyPath))
+                                        .createScoped("https://www.googleapis.com/auth/cloud-platform")
+
+                                    val gfgPolicy =
+                                        StrictMode.ThreadPolicy.Builder().permitAll().build()
+                                    StrictMode.setThreadPolicy(gfgPolicy)
+                                    // Obtain an access token
+                                    val accessToken = credentials.refreshAccessToken().tokenValue
+
+                                    // Use the access token in your FCM API requests
+                                    val authorizationHeader = "Bearer $accessToken"
+                                    val database = FirebaseDatabase.getInstance()
+                                    val reference = database.getReference("users")
+
+                                    fun sendMessageToUser(token: String){
+                                        val username = user!!.displayName
+                                        Log.d("token", token)
+                                        val messageBody = """
+                                    {
+                                        "message": {
+                                            "token": "$token",
+                                            "notification": {
+                                                "body": "${username} has created a new schedule.",
+                                                "title": "A new schedule"
+                                            }
+                                        }
+                                    }
+                                """.trimIndent()
+
+                                        // Set the request headers
+                                        val url = URL("https://fcm.googleapis.com/v1/projects/eventcalendar-566a9/messages:send")
+                                        val connection = url.openConnection() as HttpURLConnection
+                                        connection.requestMethod = "POST"
+                                        connection.setRequestProperty("Content-Type", "application/json")
+                                        connection.setRequestProperty("Authorization", authorizationHeader)
+
+                                        // Send the message body as the request payload
+                                        connection.doOutput = true
+                                        val payload = messageBody.toByteArray(StandardCharsets.UTF_8)
+                                        connection.setRequestProperty("Content-Length", payload.size.toString())
+                                        connection.outputStream.write(payload)
+
+                                        // Read the response from the server
+                                        val responseCode = connection.responseCode
+                                        val responseMessage = connection.responseMessage
+                                        val inputStream = if (responseCode < 400) connection.inputStream else connection.errorStream
+                                        val response = inputStream.bufferedReader().use { it.readText() }
+                                        inputStream.close()
+
+                                        // Handle the response
+                                        if (responseCode < 400) {
+                                            println("Message sent successfully: $response")
+                                        } else {
+                                            println("Failed to send message: $responseMessage - $response")
+                                        }
+                                    }
+
+                                    reference.addValueEventListener(object : ValueEventListener {
+                                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                            val children = dataSnapshot.children
+                                            for (postSnapshot in children) {
+                                                val event = postSnapshot.getValue<User>()!!
+                                                if (event.email != user!!.email) {
+                                                    sendMessageToUser(event.token!!)
+                                                }
+                                            }
+                                        }
+
+                                        override fun onCancelled(databaseError: DatabaseError) {
+                                            // Handle error
+                                        }
+                                    })
                                 }
                             }.addOnFailureListener {
                                 Toast.makeText(

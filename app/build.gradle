@@ -39,6 +39,15 @@ android {
     kotlin {
         jvmToolchain(17)
     }
+    configurations {
+        all {
+            exclude group :"org.threeten", module: "threetenbp"
+        }
+    }
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
+        resources.excludes.add("mozilla/public-suffix-list.txt")
+    }
 }
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
@@ -63,6 +72,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.9'
     implementation 'com.google.firebase:firebase-storage:20.3.0'
     implementation 'com.google.firebase:firebase-messaging:23.3.1'
+    implementation("com.google.firebase:firebase-analytics")
+    implementation 'com.google.firebase:firebase-appdistribution-gradle:4.0.1'
+    implementation 'androidx.work:work-runtime-ktx:2.8.1'
     testImplementation("org.threeten:threetenbp:1.6.8") {
         exclude module: "com.jakewharton.threetenabp:threetenabp:1.4.6"
     }
@@ -77,4 +89,6 @@ dependencies {
     implementation project(path: ':core')
     implementation project(path: ':emoji')
     implementation project(path: ':jsr310')
+    implementation 'com.google.cloud:google-cloud-storage:2.2.0'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.2.1'
 }
