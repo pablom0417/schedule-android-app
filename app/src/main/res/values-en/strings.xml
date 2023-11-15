@@ -21,4 +21,6 @@
     <string name="navigation_drawer_close">Close</string>
     <string name="request_users">Request Users</string>
     <string name="month_view">Monthly View</string>
+    <string name="end_time">End Time</string>
+    <string name="start_time">Start Time</string>
 </resources>

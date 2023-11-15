@@ -98,6 +98,7 @@
                 app:ecv_disallow_intercept="false"
                 app:ecv_event_item_automatic_text_color="true"
                 app:ecv_event_item_text_color="@color/ecv_black"
+                android:paddingTop="30dp"
                 app:ecv_header_visible="true" />
             <com.alamkanak.weekview.WeekView
                 android:id="@+id/weekCalendarView"
@@ -115,8 +116,8 @@
                 app:eventTextSize="8sp"
                 app:headerBottomShadowRadius="4dp"
                 app:headerPadding="0dp"
-                app:headerTextColor="@color/colorCharcoalGray"
-                app:headerTextSize="13sp"
+                app:headerTextColor="@color/black"
+                app:headerTextSize="10sp"
                 app:hourHeight="60dp"
                 app:nowLineDotRadius="5dp"
                 app:nowLineStrokeWidth="2dp"
@@ -132,10 +133,10 @@
                 app:todayBackgroundColor="#ddeeff"
                 app:todayHeaderTextColor="@android:color/holo_blue_dark"
                 app:stickToWeekInWeekView="true"
-                app:timeColumnPadding="16dp"
+                app:timeColumnPadding="4dp"
                 app:timeColumnSeparatorStrokeWidth="1dp"
                 app:timeColumnTextColor="@color/black"
-                app:timeColumnTextSize="12sp"
+                app:timeColumnTextSize="10sp"
                 app:weekNumberBackgroundColor="@android:color/holo_orange_dark"
                 app:weekNumberBackgroundCornerRadius="@dimen/corner_radius" />
 
@@ -172,27 +173,47 @@
                     />
             </LinearLayout>
 
-            <Switch
-                android:id="@+id/view_switch"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top">
+                <Switch
+                    android:id="@+id/add_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_weight="1"
+                    android:textSize="16sp"
+                    android:layout_marginStart="20dp"
+                    android:textColor="@android:color/holo_blue_dark"
+                    android:text="@string/add_memo"
+                    tools:ignore="UseSwitchCompatOrMaterialXml" />
+                <Switch
+                    android:id="@+id/view_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_weight="1"
+                    android:textSize="16sp"
+                    android:layout_marginStart="20dp"
+                    android:textColor="@android:color/holo_blue_dark"
+                    android:text="@string/month_view"
+                    tools:ignore="UseSwitchCompatOrMaterialXml" />
+            </LinearLayout>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/floatingActionButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|end"
-                android:textSize="20sp"
-                android:layout_marginStart="20dp"
-                android:textColor="@android:color/holo_blue_dark"
-                android:text="@string/month_view"
-                tools:ignore="UseSwitchCompatOrMaterialXml" />
-            <Switch
-                android:id="@+id/add_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top|start"
-                android:textSize="20sp"
-                android:layout_marginStart="20dp"
-                android:textColor="@android:color/holo_blue_dark"
-                android:visibility="gone"
-                android:text="@string/add_memo"
-                tools:ignore="UseSwitchCompatOrMaterialXml" />
+                android:layout_gravity="bottom|end"
+                android:layout_marginRight="16dp"
+                android:layout_marginBottom="60dp"
+                android:src="@drawable/icon_pencil"
+                app:backgroundTint="@android:color/holo_blue_dark"
+                app:rippleColor="@color/ecv_ripple_color"
+                app:tint="@android:color/white" />
 
         </FrameLayout>
 

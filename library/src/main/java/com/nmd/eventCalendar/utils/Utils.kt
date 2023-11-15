@@ -1,5 +1,6 @@
 package com.nmd.eventCalendar.utils
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -191,8 +192,10 @@ class Utils {
             return array[this]
         }
 
+        @SuppressLint("SimpleDateFormat")
         fun Day.dayEvents(events: ArrayList<Event>): ArrayList<Event> {
-            return ArrayList(events.filter { it.date == date })
+            return ArrayList(events.filter { it.startDate != null && SimpleDateFormat("MM/dd/yyyy").parse(it.startDate)!! <= SimpleDateFormat("MM/dd/yyyy").parse(date) &&
+                    SimpleDateFormat("MM/dd/yyyy").parse(it.endDate)!! >= SimpleDateFormat("MM/dd/yyyy").parse(date) })
         }
 
         fun Int.isDarkColor(): Boolean {

@@ -6,23 +6,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
-        android:gravity="bottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <Switch
-            android:id="@+id/input_mode_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:text="@string/add_memo"
-            android:textColor="@android:color/holo_blue_dark"
-            android:foregroundTint="@android:color/holo_green_dark"
-            android:textSize="20sp"
-            tools:ignore="UseSwitchCompatOrMaterialXml" />
-    </LinearLayout>
-
     <RelativeLayout
         android:id="@+id/eventCalendarViewMonthYearHeader"
         android:layout_width="match_parent"
@@ -175,18 +158,6 @@
                 android:layout_weight="1" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floatingActionButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginRight="16dp"
-            android:layout_marginBottom="60dp"
-            android:src="@drawable/icon_pencil"
-            app:backgroundTint="@android:color/holo_blue_dark"
-            app:rippleColor="@color/ecv_ripple_color"
-            app:tint="@android:color/white" />
 
     </FrameLayout>
 

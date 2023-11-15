@@ -152,24 +152,12 @@ class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
 
             Log.d("entered-to-this", "+++++++++++")
 
-            inputModeSwitch?.setOnCheckedChangeListener { buttonView, isChecked ->
-                if (isChecked) {
-                    inputModeSwitch.text = "Add schedule"
-                } else {
-                    inputModeSwitch.text = "Add memo"
-                }
-                isScheduleMode = isChecked
-            }
+            styleTextViews(
+                month.getDaysOfMonthAndGivenYear(year),
+                holder.ecvTextviewCircleBindings()
+            )
 
-            floatingActionButton?.setOnClickListener {
-                if (isScheduleMode) {
-                    showScheduleModal(0,1, month.getDaysOfMonthAndGivenYear(year), holder.ecvTextviewCircleBindings())
-                } else {
-                    showInputDialog("", "", month.getDaysOfMonthAndGivenYear(year), holder.ecvTextviewCircleBindings())
-                }
-            }
-
-            getMemos(month.getDaysOfMonthAndGivenYear(year), holder.ecvTextviewCircleBindings())
+//            getMemos(month.getDaysOfMonthAndGivenYear(year), holder.ecvTextviewCircleBindings())
 
 //            GlobalScope.launch {
 //                getMemos()
@@ -285,8 +273,8 @@ class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
                         ) {
                             memos.add(snapshot.getValue<Memo>()!!)
                             Log.d("memos", memos.toString())
-                            calendarEvents.add(Event(date.editText?.text.toString(), inputMemo.editText?.text.toString(), "#f44336"))
-                            styleTextViews(days, list)
+//                            calendarEvents.add(Event(date.editText?.text.toString(), inputMemo.editText?.text.toString(), "#f44336"))
+//                            styleTextViews(days, list)
                             Toast.makeText(
                                 eventCalendarViewBinding.root.context,
                                 "New memo has been added.",
@@ -459,135 +447,106 @@ class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
             val memoCell = dayItemLayout.memoCell
 
             dayItemLayout.eventCalendarViewDayFrameLayout.setOnClickListener {
-                if (isScheduleMode) {
-                    if (selected) {
-                        if (prevIndex <= index) {
-                            schedule.add(Schedule(days[prevIndex].date, days[index].date, prevIndex, index))
-                            for (i in prevIndex..index) {
-                                list[i].eventCalendarViewDayFrameLayout.setBackgroundColor(Color.parseColor("#e18900"))
-                            }
-                        } else {
-                            schedule.add(Schedule(days[index].date, days[prevIndex].date, index, prevIndex))
-                            for (i in index..prevIndex) {
-                                list[i].eventCalendarViewDayFrameLayout.setBackgroundColor(Color.parseColor("#e18900"))
-                            }
-                        }
-                        showScheduleModal(prevIndex, index, days, list)
-                        selected = false
-                        selectedDate = ""
-                    } else {
-                        dayItemLayout.eventCalendarViewDayFrameLayout.setBackgroundColor(Color.parseColor("#e18900"))
-                        selected = true
-                        selectedDate = day.date
-                        prevIndex = index
-                    }
-                } else {
-                    Log.d("memos-at-this", memos.toString())
-                    if (eventList.isNotEmpty() && eventList.any { it.date == day.date }) {
-                        val prevMemo = eventList.filter { it.date == day.date }[0].name
-                        showInputDialog(prevMemo, day.date, days, list)
-                    } else {
-                        showInputDialog("", day.date, days, list)
-                    }
-//                    if (memos.any { it.date == day.date }) {
-//                        val prevMemo = memos.filter { it.date == day.date }[0].memo
-//                        if (memos.removeIf { it.date == day.date }) {
-//                            if (prevMemo != null) {
-//                                showInputDialog(prevMemo, day.date, days, list)
+//                if (isScheduleMode) {
+//                    if (selected) {
+//                        if (prevIndex <= index) {
+//                            schedule.add(Schedule(days[prevIndex].date, days[index].date, prevIndex, index))
+//                            for (i in prevIndex..index) {
+//                                list[i].eventCalendarViewDayFrameLayout.setBackgroundColor(Color.parseColor("#e18900"))
+//                            }
+//                        } else {
+//                            schedule.add(Schedule(days[index].date, days[prevIndex].date, index, prevIndex))
+//                            for (i in index..prevIndex) {
+//                                list[i].eventCalendarViewDayFrameLayout.setBackgroundColor(Color.parseColor("#e18900"))
 //                            }
 //                        }
+//                        showScheduleModal(prevIndex, index, days, list)
+//                        selected = false
+//                        selectedDate = ""
+//                    } else {
+//                        dayItemLayout.eventCalendarViewDayFrameLayout.setBackgroundColor(Color.parseColor("#e18900"))
+//                        selected = true
+//                        selectedDate = day.date
+//                        prevIndex = index
+//                    }
+//                } else {
+//                    Log.d("memos-at-this", memos.toString())
+//                    if (eventList.isNotEmpty() && eventList.any { it.date == day.date }) {
+//                        val prevMemo = eventList.filter { it.date == day.date }[0].name
+//                        showInputDialog(prevMemo, day.date, days, list)
 //                    } else {
 //                        showInputDialog("", day.date, days, list)
 //                    }
-                }
+////                    if (memos.any { it.date == day.date }) {
+////                        val prevMemo = memos.filter { it.date == day.date }[0].memo
+////                        if (memos.removeIf { it.date == day.date }) {
+////                            if (prevMemo != null) {
+////                                showInputDialog(prevMemo, day.date, days, list)
+////                            }
+////                        }
+////                    } else {
+////                        showInputDialog("", day.date, days, list)
+////                    }
+//                }
                 eventCalendarView.clickListener?.onClick(day)
             }
 
-            dayItemLayout.eventCalendarViewDayFrameLayout.setOnLongClickListener {
-                if (isScheduleMode) {
-                    if (eventList.isNotEmpty() && eventList.any { it.date == day.date }) {
-                        Log.d("entered here", "entered here")
-                        val alertDialogBuilder = MaterialAlertDialogBuilder(eventCalendarViewBinding.root.context)
-                        alertDialogBuilder.setTitle("Delete schedule")
-                        alertDialogBuilder.setMessage("Are you sure you want to delete this schedule?")
-                        alertDialogBuilder.setCancelable(false)
-                            .setPositiveButton("Delete"
-                            ) { _, _ ->
-                                Toast.makeText(
-                                    eventCalendarViewBinding.root.context,
-                                    "Schedule has been deleted.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                            .setNegativeButton("Cancel"
-                            ) { _, _ ->  }
-                        alertDialogBuilder.setCancelable(true)
-                        alertDialogBuilder.show()
-                        return@setOnLongClickListener false
-                    } else {
-                        return@setOnLongClickListener false
-                    }
-//                    if (schedule.any { it.startDate <= day.date && it.endDate >= day.date }) {
-//                        val filter = schedule.filter { it.startDate <= day.date && it.endDate >= day.date }
+//            dayItemLayout.eventCalendarViewDayFrameLayout.setOnLongClickListener {
+//                if (isScheduleMode) {
+//                    if (eventList.isNotEmpty() && eventList.any { it.startDate == day.date }) {
+//                        Log.d("entered here", "entered here")
 //                        val alertDialogBuilder = MaterialAlertDialogBuilder(eventCalendarViewBinding.root.context)
 //                        alertDialogBuilder.setTitle("Delete schedule")
 //                        alertDialogBuilder.setMessage("Are you sure you want to delete this schedule?")
 //                        alertDialogBuilder.setCancelable(false)
 //                            .setPositiveButton("Delete"
 //                            ) { _, _ ->
-//                                if (schedule.removeIf { it.startDate <= day.date && it.endDate >= day.date }) {
-//                                    for (item in filter) {
-//                                        for (i in item.startDateIndex..item.endDateIndex) {
-//                                            list[i].eventCalendarViewDayFrameLayout.setBackgroundColor(Color.WHITE)
-//                                        }
-//                                    }
-//                                    styleTextViews(days, list)
-//                                    Toast.makeText(
-//                                        eventCalendarViewBinding.root.context,
-//                                        "Schedule has been deleted.",
-//                                        Toast.LENGTH_SHORT
-//                                    ).show()
-//                                }
+//                                Toast.makeText(
+//                                    eventCalendarViewBinding.root.context,
+//                                    "Schedule has been deleted.",
+//                                    Toast.LENGTH_SHORT
+//                                ).show()
 //                            }
 //                            .setNegativeButton("Cancel"
 //                            ) { _, _ ->  }
-//
-//                        // create an alert dialog
 //                        alertDialogBuilder.setCancelable(true)
 //                        alertDialogBuilder.show()
-//                        return@setOnLongClickListener true
+//                        return@setOnLongClickListener false
+//                    } else {
+//                        return@setOnLongClickListener false
 //                    }
-                } else {
-                    if (eventList.isNotEmpty() && eventList.any { it.date == day.date }) {
-                        val alertDialogBuilder = MaterialAlertDialogBuilder(eventCalendarViewBinding.root.context)
-                        alertDialogBuilder.setTitle("Delete memo")
-                        alertDialogBuilder.setMessage("Are you sure you want to delete this memo?")
-                        alertDialogBuilder.setCancelable(false)
-                            .setPositiveButton("Delete"
-                            ) { _, _ ->
-//                                val key = memoDatabaseReference.child("date").equalTo(day.date).remo
-//                                Log.d("filteredData", key)
-                                val eventsToRemove = memos.filter { it -> it.date == day.date }[0]
-                                if (memos.remove(eventsToRemove)) {
-                                    styleTextViews(days, list)
-                                    Toast.makeText(
-                                        eventCalendarViewBinding.root.context,
-                                        "Memo has been deleted.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            }
-                            .setNegativeButton("Cancel"
-                            ) { _, _ ->  }
-
-                        // create an alert dialog
-                        alertDialogBuilder.setCancelable(true)
-                        alertDialogBuilder.show()
-                        return@setOnLongClickListener false
-                    } else {
-                        return@setOnLongClickListener false
-                    }
-//                    if (memos.any { it.date == day.date }) {
+////                    if (schedule.any { it.startDate <= day.date && it.endDate >= day.date }) {
+////                        val filter = schedule.filter { it.startDate <= day.date && it.endDate >= day.date }
+////                        val alertDialogBuilder = MaterialAlertDialogBuilder(eventCalendarViewBinding.root.context)
+////                        alertDialogBuilder.setTitle("Delete schedule")
+////                        alertDialogBuilder.setMessage("Are you sure you want to delete this schedule?")
+////                        alertDialogBuilder.setCancelable(false)
+////                            .setPositiveButton("Delete"
+////                            ) { _, _ ->
+////                                if (schedule.removeIf { it.startDate <= day.date && it.endDate >= day.date }) {
+////                                    for (item in filter) {
+////                                        for (i in item.startDateIndex..item.endDateIndex) {
+////                                            list[i].eventCalendarViewDayFrameLayout.setBackgroundColor(Color.WHITE)
+////                                        }
+////                                    }
+////                                    styleTextViews(days, list)
+////                                    Toast.makeText(
+////                                        eventCalendarViewBinding.root.context,
+////                                        "Schedule has been deleted.",
+////                                        Toast.LENGTH_SHORT
+////                                    ).show()
+////                                }
+////                            }
+////                            .setNegativeButton("Cancel"
+////                            ) { _, _ ->  }
+////
+////                        // create an alert dialog
+////                        alertDialogBuilder.setCancelable(true)
+////                        alertDialogBuilder.show()
+////                        return@setOnLongClickListener true
+////                    }
+//                } else {
+//                    if (eventList.isNotEmpty() && eventList.any { it.startDate == day.date }) {
 //                        val alertDialogBuilder = MaterialAlertDialogBuilder(eventCalendarViewBinding.root.context)
 //                        alertDialogBuilder.setTitle("Delete memo")
 //                        alertDialogBuilder.setMessage("Are you sure you want to delete this memo?")
@@ -612,12 +571,41 @@ class InfiniteAdapter(private val eventCalendarView: EventCalendarView) :
 //                        // create an alert dialog
 //                        alertDialogBuilder.setCancelable(true)
 //                        alertDialogBuilder.show()
-//                        return@setOnLongClickListener true
+//                        return@setOnLongClickListener false
 //                    } else {
 //                        return@setOnLongClickListener false
 //                    }
-                }
-            }
+////                    if (memos.any { it.date == day.date }) {
+////                        val alertDialogBuilder = MaterialAlertDialogBuilder(eventCalendarViewBinding.root.context)
+////                        alertDialogBuilder.setTitle("Delete memo")
+////                        alertDialogBuilder.setMessage("Are you sure you want to delete this memo?")
+////                        alertDialogBuilder.setCancelable(false)
+////                            .setPositiveButton("Delete"
+////                            ) { _, _ ->
+//////                                val key = memoDatabaseReference.child("date").equalTo(day.date).remo
+//////                                Log.d("filteredData", key)
+////                                val eventsToRemove = memos.filter { it -> it.date == day.date }[0]
+////                                if (memos.remove(eventsToRemove)) {
+////                                    styleTextViews(days, list)
+////                                    Toast.makeText(
+////                                        eventCalendarViewBinding.root.context,
+////                                        "Memo has been deleted.",
+////                                        Toast.LENGTH_SHORT
+////                                    ).show()
+////                                }
+////                            }
+////                            .setNegativeButton("Cancel"
+////                            ) { _, _ ->  }
+////
+////                        // create an alert dialog
+////                        alertDialogBuilder.setCancelable(true)
+////                        alertDialogBuilder.show()
+////                        return@setOnLongClickListener true
+////                    } else {
+////                        return@setOnLongClickListener false
+////                    }
+//                }
+//            }
 
             val textView: MaterialTextView = dayItemLayout.eventCalendarViewDayTextView
 

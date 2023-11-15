@@ -1,4 +1,4 @@
-package com.alamkanak.weekview.sample.data.model
+package com.nmd.eventCalendar.data.model
 
 import android.graphics.Color
 import android.text.SpannableStringBuilder
@@ -52,9 +52,9 @@ fun CalendarEntity.Event.toWeekViewEntity(): WeekViewEntity {
 
     val title = SpannableStringBuilder(title).apply {
         val titleSpan = TypefaceSpan("sans-serif-medium")
-        setSpan(titleSpan, 0, 0, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setSpan(titleSpan, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         if (isCanceled) {
-            setSpan(StrikethroughSpan(), 0, 0, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(StrikethroughSpan(), 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
     }
 

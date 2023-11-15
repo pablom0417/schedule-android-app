@@ -1,6 +1,7 @@
-package com.alamkanak.weekview.sample.util
+package com.nmd.eventCalendar.util
 
 import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
@@ -9,8 +10,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelLazy
 import androidx.lifecycle.ViewModelProvider
-import com.alamkanak.weekview.sample.data.EventsRepository
-import com.alamkanak.weekview.sample.data.model.CalendarEntity
+import com.nmd.eventCalendar.data.EventsRepository
+import com.nmd.eventCalendar.data.model.CalendarEntity
 import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -40,6 +41,7 @@ class GenericViewModel(
     fun fetchEvents(yearMonths: List<YearMonth>) {
         eventsRepository.fetch(yearMonths = yearMonths) { entities ->
             val existingEntities = _viewState.value?.entities.orEmpty()
+            Log.d("existingEntities", entities.toString())
             _viewState.value = GenericViewState(entities = existingEntities + entities)
         }
     }

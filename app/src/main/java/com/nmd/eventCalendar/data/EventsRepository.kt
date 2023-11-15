@@ -1,15 +1,15 @@
-package com.alamkanak.weekview.sample.data
+package com.nmd.eventCalendar.data
 
 import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
-import com.alamkanak.weekview.sample.data.model.ApiBlockedTime
-import com.alamkanak.weekview.sample.data.model.ApiEvent
-import com.alamkanak.weekview.sample.data.model.ApiResult
-import com.alamkanak.weekview.sample.data.model.CalendarEntity
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.nmd.eventCalendar.data.model.ApiBlockedTime
+import com.nmd.eventCalendar.data.model.ApiEvent
+import com.nmd.eventCalendar.data.model.ApiResult
+import com.nmd.eventCalendar.data.model.CalendarEntity
 import java.time.YearMonth
 
 class EventsRepository(private val context: Context) {

@@ -1,35 +1,17 @@
-plugins {
-    id 'com.android.library'
-    id 'kotlin-android'
-    id 'maven-publish'
-}
+apply plugin: 'com.android.library'
 
 android {
-    compileSdk 34
+    namespace 'com.alamkanak.weekview'
+    compileSdkVersion 34
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 19
         targetSdkVersion 34
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-    namespace 'de.tobiasschuerg.weekview'
 }
 
 dependencies {
-    implementation 'androidx.annotation:annotation:1.7.0'
-    api 'com.jakewharton.threetenabp:threetenabp:1.4.6'
-
-    testImplementation 'junit:junit:4.13.2'
+    implementation 'com.android.support:appcompat-v7:23.1.1'
 }
+
+//apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'

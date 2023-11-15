@@ -192,7 +192,7 @@ class EventCalendarSingleWeekView @JvmOverloads constructor(
 
         val eventArrayList1 = ArrayList<Event>()
         for (day in days) {
-            eventArrayList1.addAll(eventArrayList.filter { it.date == day.date })
+            eventArrayList1.addAll(eventArrayList.filter { it.startDate!! <= day.date && it.endDate!! >= day.date })
         }
 
         styleTextViews(days, bindingArrayList, ArrayList(eventArrayList1))

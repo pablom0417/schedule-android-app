@@ -1,4 +1,4 @@
-package com.alamkanak.weekview.sample.util
+package com.nmd.eventCalendar.util
 
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData

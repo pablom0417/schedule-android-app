@@ -20,6 +20,7 @@
         android:gravity="center"
         android:padding="16dp"
         android:singleLine="true"
+        android:minLines="2"
         android:textColor="@color/ecv_charcoal_color"
         tools:text="Vacation" />
 

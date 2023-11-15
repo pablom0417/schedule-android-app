@@ -19,8 +19,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.alamkanak.weekview.WeekViewEntity
+import com.alamkanak.weekview.jsr310.WeekViewPagingAdapterJsr310
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -29,37 +31,33 @@ import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.getValue
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import com.jakewharton.threetenabp.AndroidThreeTen
-import com.nmd.eventCalendar.MainActivity.RandomEventList.Companion.createRandomEventList
+import com.nmd.eventCalendar.data.model.CalendarEntity
+import com.nmd.eventCalendar.data.model.toWeekViewEntity
 import com.nmd.eventCalendar.`interface`.EventCalendarDayClickListener
 import com.nmd.eventCalendar.`interface`.EventCalendarScrollListener
 import com.nmd.eventCalendar.model.Day
 import com.nmd.eventCalendar.model.Event
+import com.nmd.eventCalendar.util.defaultDateTimeFormatter
+import com.nmd.eventCalendar.util.genericViewModel
+import com.nmd.eventCalendar.util.showToast
+import com.nmd.eventCalendar.util.yearMonthsBetween
+import com.nmd.eventCalendar.utils.Utils.Companion.getActivity
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivityMainBinding
 import com.nmd.eventCalendarSample.databinding.BottomSheetBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.YearMonth
-import java.util.Calendar
-
-import com.alamkanak.weekview.jsr310.WeekViewPagingAdapterJsr310
-import com.alamkanak.weekview.jsr310.setDateFormatter
-import com.alamkanak.weekview.sample.data.model.CalendarEntity
-import com.alamkanak.weekview.sample.data.model.toWeekViewEntity
-import com.alamkanak.weekview.sample.util.GenericAction
-import com.alamkanak.weekview.sample.util.defaultDateTimeFormatter
-import com.alamkanak.weekview.sample.util.genericViewModel
-import com.alamkanak.weekview.sample.util.showToast
-import com.alamkanak.weekview.sample.util.subscribeToEvents
-import com.alamkanak.weekview.sample.util.yearMonthsBetween
-import com.nmd.eventCalendar.databinding.EcvTextviewCircleBinding
-import com.nmd.eventCalendar.model.Schedule
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.Locale
 
 open class MainActivity : AppCompatActivity() {
@@ -71,17 +69,36 @@ open class MainActivity : AppCompatActivity() {
     private var currentScheduleEndDate: String = ""
     private var isWeekView = false
     private var isScheduleMode = false
+    private var color = arrayOf(
+        "#e18900", "#f44336", "#4badeb", "#AB274F", "#CA1F7B", "#0BDA51"
+    )
 
     @SuppressLint("StaticFieldLeak")
     var logoutButton: ImageView? = null
     var fullName: TextView? = null
     var firebaseAuth: FirebaseAuth? = null
+    public var user: FirebaseUser? = null
     private val authStateListener: AuthStateListener? = null
+
+    var firebaseDatabase = Firebase.database.reference
+    var memoDatabaseReference = firebaseDatabase.child("memos")
+    var scheduleDatabaseReference = firebaseDatabase.child("schedules")
+    var memo: Event? = null
+    var schedule: Event? = null
+    var schedules: ArrayList<Event> = ArrayList()
+
+    private val viewModel by genericViewModel()
 
     var dataModels: ArrayList<DataModel>? = null
     private var adapter: CustomAdapter? = null
 
-    private val viewModel by genericViewModel()
+
+    private val weekViewAdapter: StaticActivityWeekViewAdapter by lazy {
+        StaticActivityWeekViewAdapter(
+            loadMoreHandler = this::onLoadMore,
+            rangeChangeHandler = this::onRangeChanged
+        )
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val weekdayFormatter = DateTimeFormatter.ofPattern("E", Locale.getDefault())
@@ -94,7 +111,7 @@ open class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
-        AndroidThreeTen.init(this);
+        AndroidThreeTen.init(this)
 
         initialize()
     }
@@ -120,16 +137,32 @@ open class MainActivity : AppCompatActivity() {
             val navHeader: View = navView.getHeaderView(0)
             val username = navHeader.findViewById(R.id.textViewUserName) as TextView
 
-            val user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
+            user = FirebaseAuth.getInstance().currentUser
             if (user != null) {
-                username.text = user.email
+                username.text = user!!.email
             }
 
             val year = Calendar.getInstance().get(Calendar.YEAR)
 
+            loadList {
+                eventCalendarView.events = it
+                Log.d("event-list", eventCalendarView.events.toString())
+                eventCalendarView.post {
+                    progressBar.visibility = View.GONE
+                    eventCalendarView.visibility = View.VISIBLE
+                }
+            }
+
+            loadSchedule {
+                schedules = it
+            }
+
             eventCalendarView.setMonthAndYear(
                 startMonth = 1, startYear = year - 10, endMonth = 12, endYear = year + 10
             )
+
+            weekCalendarView.adapter = weekViewAdapter
+
             eventCalendarViewCalendarImageView.setOnClickListener {
                 eventCalendarView.scrollToCurrentMonth(false)
             }
@@ -144,111 +177,53 @@ open class MainActivity : AppCompatActivity() {
                 if (isChecked) {
                     eventCalendarView.visibility = View.GONE
                     weekCalendarView.visibility = View.VISIBLE
-                    addSwitch.visibility = View.VISIBLE
                     viewSwitch.text = "Weekly View"
-                    addSwitch.setOnCheckedChangeListener { _, isChk ->
-                        if (isChk) {
-                            addSwitch.text = "Add schedule"
-                        } else {
-                            addSwitch.text = "Add memo"
-                        }
-                        isScheduleMode = isChk
-                    }
                 } else {
                     eventCalendarView.visibility = View.VISIBLE
                     weekCalendarView.visibility = View.GONE
-                    addSwitch.visibility = View.GONE
                     viewSwitch.text = "Monthly View"
                 }
                 isWeekView = isChecked
             }
-
-            val weekViewAdapter = BasicActivityWeekViewAdapter(
-                dragHandler = viewModel::handleDrag,
-                loadMoreHandler = viewModel::fetchEvents,
-            )
-
-            weekCalendarView.adapter = weekViewAdapter
-
-            weekCalendarView.setDateFormatter { date: LocalDate ->
-                val weekdayLabel = weekdayFormatter.format(date)
-                val dateLabel = dateFormatter.format(date)
-                weekdayLabel + "\n" + dateLabel
-            }
-
-            viewModel.viewState.observe(this@MainActivity) { viewState ->
-                weekViewAdapter.submitList(viewState.entities)
-            }
-
-            viewModel.actions.subscribeToEvents(this@MainActivity) { action ->
-                when (action) {
-                    is GenericAction.ShowSnackbar -> {
-                        Snackbar
-                            .make(weekCalendarView, action.message, Snackbar.LENGTH_SHORT)
-                            .setAction("Undo") { action.undoAction() }
-                            .show()
+            addSwitch.setOnCheckedChangeListener { _, isChk ->
+                if (isChk) {
+                    loadSchedule {
+                        eventCalendarView.events = it
+                        addSwitch.text = "Add schedule"
+                        eventCalendarView.post {
+                            progressBar.visibility = View.GONE
+                            eventCalendarView.visibility = View.VISIBLE
+                        }
                     }
-
-                }
-            }
-
-            eventCalendarLogoutImageView.setOnClickListener {
-                progressBar.visibility = View.VISIBLE
-                eventCalendarView.visibility = View.GONE
-
-                createRandomEventList(256) {
-                    eventCalendarView.events = it
-                    eventCalendarView.post {
-                        progressBar.visibility = View.GONE
-                        eventCalendarView.visibility = View.VISIBLE
+                } else {
+                    loadList {
+                        eventCalendarView.events = it
+                        addSwitch.text = "Add memo"
+                        eventCalendarView.post {
+                            progressBar.visibility = View.GONE
+                            eventCalendarView.visibility = View.VISIBLE
+                        }
                     }
                 }
+                isScheduleMode = isChk
+            }
+
+            floatingActionButton?.setOnClickListener {
+                showInputDialog(Event(user?.email))
             }
 
             eventCalendarView.addOnDayClickListener(object : EventCalendarDayClickListener {
                 @SuppressLint("SimpleDateFormat")
                 override fun onClick(day: Day) {
-//                    if (selectedDate == day.date && selected) {
-//                        val eventList = eventCalendarView.events.filter { it.date == day.date }
-//                        bottomSheet(day, eventList)
-//                        selected = false
-//                    } else {
-//                        selectedDate = day.date
-//                        selected = true
-//                    }
-//                    if (!isScheduleMode) {
-//                        showInputDialog(day.date, day.date)
-//                    }
-//                    else {
-//                        Log.d("day.date", day.date)
-//                        Log.d("currentScheduleStartDate", currentScheduleStartDate)
-//                        Log.d("currentScheduleEndDate", currentScheduleEndDate)
-//                        if (selected && prevSelectedDate != "") {
-//                            Log.d("datedate", "--------")
-//                            val formatter = SimpleDateFormat("MM/dd/yyyy")
-//                            var sDate = formatter.parse(prevSelectedDate)
-//                            var eDate = formatter.parse(selectedDate)
-//                            if (prevSelectedDate <= selectedDate) {
-//                                currentScheduleStartDate = prevSelectedDate
-//                                currentScheduleEndDate = selectedDate
-//                            } else {
-//                                currentScheduleStartDate = selectedDate
-//                                currentScheduleEndDate = prevSelectedDate
-//                            }
-//                            if (day.date in currentScheduleStartDate..currentScheduleEndDate) {
-//                                Log.d("datedate", "++++++++")
-//                                showInputDialog(currentScheduleStartDate, currentScheduleEndDate)
-//                            }
-//                            selected = false
-//                            prevSelectedDate = ""
-//                            selectedDate = ""
-//                        } else {
-//                            Log.d("datedate", "oooooooo")
-//                            selected = true
-//                            prevSelectedDate = selectedDate
-//                            selectedDate = day.date
-//                        }
-//                    }
+                    if (!isScheduleMode) {
+                        val eventList = eventCalendarView.events.filter { it.startDate != null && SimpleDateFormat("MM/dd/yyyy").parse(it.startDate)!! <= SimpleDateFormat("MM/dd/yyyy").parse(day.date) &&
+                                SimpleDateFormat("MM/dd/yyyy").parse(it.endDate)!! >= SimpleDateFormat("MM/dd/yyyy").parse(day.date) }
+                        bottomSheet(day, eventList)
+                    } else {
+                        val eventList = eventCalendarView.events.filter { it.startDate != null && SimpleDateFormat("MM/dd/yyyy").parse(it.startDate)!! <= SimpleDateFormat("MM/dd/yyyy").parse(day.date) &&
+                                SimpleDateFormat("MM/dd/yyyy").parse(it.endDate)!! >= SimpleDateFormat("MM/dd/yyyy").parse(day.date) }
+                        bottomSheet(day, eventList)
+                    }
                 }
             })
 
@@ -257,18 +232,6 @@ open class MainActivity : AppCompatActivity() {
                     Log.i("ECV", "Scrolled to: $month $year")
                 }
             })
-
-            createRandomEventList(256) {
-                eventCalendarView.events = it
-                eventCalendarView.post {
-                    progressBar.visibility = View.GONE
-                    eventCalendarView.visibility = View.VISIBLE
-                }
-            }
-
-//            floatingActionButton.setOnClickListener {
-//                showInputDialog("", "")
-//            }
 
             eventCalendarNotificationImageView.setOnClickListener {it ->
                 Snackbar.make(
@@ -286,6 +249,8 @@ open class MainActivity : AppCompatActivity() {
             eventCalendarLogoutImageView.setOnClickListener(View.OnClickListener {
                 showLogoutConfirmDialog()
             })
+
+//            Log.d("all-users-list", Firebase)
 
             dataModels = ArrayList()
 
@@ -311,20 +276,42 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("SetTextI18n", "UseCompatLoadingForDrawables")
-    protected fun showInputDialog(prevMemo: String, startDate: String, endDate: String) {
+    private fun onLoadMore(yearMonths: List<YearMonth>) {
+        viewModel.fetchEvents(yearMonths)
+    }
+
+    private fun onRangeChanged(startDate: LocalDate, endDate: LocalDate) {
+//        binding.dateRangeTextView.text = buildDateRangeText(startDate, endDate)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    @SuppressLint("SetTextI18n", "UseCompatLoadingForDrawables", "SimpleDateFormat")
+    protected fun showInputDialog(event: Event?) {
         // get prompts.xml view
         val layoutInflater = LayoutInflater.from(this@MainActivity)
         val promptView: View = layoutInflater.inflate(R.layout.add_dialog_content, null)
-        val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
-        if (prevMemo != "") alertDialogBuilder.setTitle("Edit memo") else alertDialogBuilder.setTitle("Add memo")
+        val alertDialogBuilder = AlertDialog.Builder(this)
+            .setPositiveButton("Save", null)
+            .setNegativeButton("Cancel"
+            ) { _, _ -> }
+            .create()
+        if (event != null) {
+            if (isScheduleMode) alertDialogBuilder.setTitle("Edit schedule") else alertDialogBuilder.setTitle("Edit memo")
+        } else {
+            if (isScheduleMode) alertDialogBuilder.setTitle("Add schedule") else alertDialogBuilder.setTitle("Add memo")
+        }
         alertDialogBuilder.setView(promptView)
         val inputStartDate = promptView.findViewById<View>(R.id.input_start_date) as TextInputLayout
         val inputEndDate = promptView.findViewById<View>(R.id.input_end_date) as TextInputLayout
+        val inputStartTime = promptView.findViewById<View>(R.id.input_start_time) as TextInputLayout
+        val inputEndTime = promptView.findViewById<View>(R.id.input_end_time) as TextInputLayout
         val inputMemo = promptView.findViewById<View>(R.id.input_memo) as TextInputLayout
-        inputStartDate.editText?.setText(startDate)
-        inputEndDate.editText?.setText(endDate)
-        inputMemo.editText?.setText(prevMemo)
+        if (event?.startDate != null) inputStartDate.editText?.setText(event.startDate)
+        if (event?.endDate != null) inputEndDate.editText?.setText(event.endDate)
+        if (event?.startTime != null) inputStartTime.editText?.setText(event.startTime)
+        if (event?.endTime != null) inputEndTime.editText?.setText(event.endTime)
+        if (event?.name != null) inputMemo.editText?.setText(event.name)
+
         inputStartDate.editText?.setOnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
                 pickDate(inputStartDate.editText!!)
@@ -335,17 +322,151 @@ open class MainActivity : AppCompatActivity() {
                 pickDate(inputEndDate.editText!!)
             }
         }
-        // setup a dialog window
-        alertDialogBuilder.setCancelable(false)
-            .setPositiveButton("OK",
-                DialogInterface.OnClickListener { dialog, id -> Toast.makeText(this@MainActivity, "New memo successfully added.", Toast.LENGTH_SHORT).show() })
-            .setNegativeButton("Cancel",
-                DialogInterface.OnClickListener { dialog, id ->  })
-
+        inputStartTime.editText?.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                pickTime(inputStartTime.editText!!)
+            }
+        }
+        inputEndTime.editText?.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) {
+                pickTime(inputEndTime.editText!!)
+            }
+        }
         // create an alert dialog
         alertDialogBuilder.setCancelable(true)
-        alertDialogBuilder.background = getDrawable(R.drawable.background_rounded)
         alertDialogBuilder.show()
+        val positiveButton = alertDialogBuilder.getButton(AlertDialog.BUTTON_POSITIVE)
+        // setup a dialog window
+        positiveButton.setOnClickListener { _ ->
+            if (inputStartDate.editText?.text.isNullOrEmpty() ||
+                inputEndDate.editText?.text.isNullOrEmpty() ||
+                inputStartTime.editText?.text.isNullOrEmpty() ||
+                inputEndTime.editText?.text.isNullOrEmpty()
+            ) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "The date and time fields are required.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                memo = Event(
+                    user?.email!!,
+                    inputStartDate.editText?.text.toString(),
+                    inputEndDate.editText?.text.toString(),
+                    inputStartTime.editText?.text.toString(),
+                    inputEndTime.editText?.text.toString(),
+                    inputMemo.editText?.text.toString(),
+                    if (event?.backgroundHexColor != null) event.backgroundHexColor else color.random()
+                )
+                val isExist = binding.eventCalendarView.events.any {
+                    it.startDate != null && it.endDate != null && it.startTime != null && it.endTime != null &&
+                    it.startDate!! < memo!!.endDate!! && it.endDate!! > memo!!.startDate!! && it.startTime!! < memo!!.endTime!! && it.endTime!! > memo!!.startTime!!
+                }
+                Log.d("is-exist---", isExist.toString())
+                if (isExist) {
+                    Toast.makeText(this, "Datetime you input have been already booked.", Toast.LENGTH_LONG).show()
+                } else {
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.eventCalendarView.visibility = View.GONE
+                    binding.eventCalendarView.events = ArrayList()
+                    if (event?.id == null) {
+                        if (isScheduleMode) {
+                            scheduleDatabaseReference.push().setValue(memo).addOnSuccessListener{
+                                loadSchedule {
+                                    binding.eventCalendarView.events = it
+                                    binding.progressBar.visibility = View.GONE
+                                    binding.eventCalendarView.visibility = View.VISIBLE
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "The schedule is successfully created.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    alertDialogBuilder.dismiss()
+                                }
+                            }.addOnFailureListener {
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Creating the schedule failed.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            if (schedules.any {
+                                    it.startDate!! <= memo!!.startDate!! && it.endDate!! >= memo!!.endDate!! && it.startTime!! <= memo!!.startTime!! && it.endTime!! >= memo!!.endTime!!
+                                }) {
+                                memoDatabaseReference.push().setValue(memo).addOnSuccessListener{
+                                    loadList {
+                                        binding.eventCalendarView.events = it
+                                        binding.progressBar.visibility = View.GONE
+                                        binding.eventCalendarView.visibility = View.VISIBLE
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "The memo is successfully created.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        alertDialogBuilder.dismiss()
+                                    }
+                                }.addOnFailureListener {
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Creating the memo failed.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            } else {
+                                Toast.makeText(this, "The corresponding schedule does not exist.", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        if (isScheduleMode) {
+                            scheduleDatabaseReference.child(event.id!!).setValue(memo).addOnSuccessListener {
+                                loadSchedule {
+                                    binding.eventCalendarView.events = it
+                                    binding.progressBar.visibility = View.GONE
+                                    binding.eventCalendarView.visibility = View.VISIBLE
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "The schedule is successfully updated.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    alertDialogBuilder.dismiss()
+                                }
+                            }.addOnFailureListener {
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Updating the schedule failed.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } else {
+                            if (schedules.any {
+                                    it.startDate!! <= memo!!.startDate!! && it.endDate!! >= memo!!.endDate!! && it.startTime!! <= memo!!.startTime!! && it.endTime!! >= memo!!.endTime!!
+                                }) {
+                                memoDatabaseReference.child(event.id!!).setValue(memo).addOnSuccessListener {
+                                    loadList {
+                                        binding.eventCalendarView.events = it
+                                        binding.progressBar.visibility = View.GONE
+                                        binding.eventCalendarView.visibility = View.VISIBLE
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            "The memo is successfully updated.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        alertDialogBuilder.dismiss()
+                                    }
+                                }.addOnFailureListener {
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Updating the memo failed.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun showScheduleModal(prevSchedule: String, start: String, end: String) {
@@ -393,6 +514,7 @@ open class MainActivity : AppCompatActivity() {
         alertDialogBuilder.show()
     }
 
+    @SuppressLint("SetTextI18n")
     private fun showAcceptConfirmDialog(dataModel: DataModel) {
         val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
         alertDialogBuilder.setTitle("View others' calendar")
@@ -418,7 +540,7 @@ open class MainActivity : AppCompatActivity() {
         alertDialogBuilder.show()
     }
 
-    protected fun showLogoutConfirmDialog() {
+    private fun showLogoutConfirmDialog() {
         val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
         alertDialogBuilder.setTitle("Sign out")
         alertDialogBuilder.setMessage("Are you sure you want to sign out?")
@@ -450,6 +572,61 @@ open class MainActivity : AppCompatActivity() {
         alertDialogBuilder.show()
     }
 
+    private fun showDeleteConfirmButton(id: String) {
+        val alertDialogBuilder = MaterialAlertDialogBuilder(this)
+        alertDialogBuilder.setTitle("Delete memo")
+        alertDialogBuilder.setMessage("Are you sure you want to delete this memo?")
+        alertDialogBuilder.setCancelable(false)
+            .setPositiveButton("Delete"
+            ) { _, _ ->
+                binding.progressBar.visibility = View.VISIBLE
+                binding.eventCalendarView.visibility = View.GONE
+                binding.eventCalendarView.events = ArrayList()
+                if (isScheduleMode) {
+                    scheduleDatabaseReference.child(id).removeValue().addOnSuccessListener {
+                        loadSchedule {
+                            binding.eventCalendarView.events = it
+                            binding.progressBar.visibility = View.GONE
+                            binding.eventCalendarView.visibility = View.VISIBLE
+                            Toast.makeText(
+                                this,
+                                "Memo has been deleted.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }.addOnFailureListener {
+                        Toast.makeText(
+                            this,
+                            "Deleting memo failed.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    memoDatabaseReference.child(id).removeValue().addOnSuccessListener {
+                        loadList {
+                            binding.eventCalendarView.events = it
+                            binding.progressBar.visibility = View.GONE
+                            binding.eventCalendarView.visibility = View.VISIBLE
+                            Toast.makeText(
+                                this,
+                                "Memo has been deleted.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }.addOnFailureListener {
+                        Toast.makeText(
+                            this,
+                            "Deleting memo failed.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancel"
+            ) { _, _ ->  }
+        alertDialogBuilder.setCancelable(false)
+        alertDialogBuilder.show()
+    }
     private fun pickDate(component: EditText) {
         val c = Calendar.getInstance()
         // our day, month and year.
@@ -463,7 +640,6 @@ open class MainActivity : AppCompatActivity() {
                 // date to our edit text.
                 val dat = String.format("%02d/%02d/%04d", monthOfYear + 1, dayOfMonth, year)
                 component.setText(dat)
-                pickTime(component, dat)
             },
             // and day for the selected date in our date picker.
             year,
@@ -475,7 +651,7 @@ open class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("SetTextI18n")
-    private fun pickTime(component: EditText, prevText: String) {
+    private fun pickTime(component: EditText) {
         val c = Calendar.getInstance()
         val hour = c.get(Calendar.HOUR_OF_DAY)
         val minute = c.get(Calendar.MINUTE)
@@ -483,7 +659,8 @@ open class MainActivity : AppCompatActivity() {
             this,
             { _, hourOfDay, minutes ->
                 val time = String.format("%02d:%02d", hourOfDay, minutes)
-                component.setText("$prevText $time")
+                Log.d("picked_time", time)
+                component.setText(time)
             },
             hour, minute, true
         )
@@ -497,180 +674,159 @@ open class MainActivity : AppCompatActivity() {
         vibrator.vibrate(15)
     }
 
+    @SuppressLint("SimpleDateFormat")
+    private fun getAllDates(mDate1: String, mDate2: String) {
+        // Creating a date format
+        val mDateFormat = SimpleDateFormat("MM/dd/yyyy")
+
+        // Converting the dates
+        // from string to date format
+        val mDate11 = mDateFormat.parse(mDate1)
+        val mDate22 = mDateFormat.parse(mDate2)
+        val cal1 = Calendar.getInstance()
+        cal1.time = mDate11!!
+
+        val cal2 = Calendar.getInstance()
+        cal2.time = mDate22!!
+
+        while (!cal1.after(cal2)) {
+            Log.d("all dates", String.format("%02d/%02d/%04d", cal1.get(Calendar.MONTH) + 1, cal1.get(Calendar.DAY_OF_MONTH), cal1.get(Calendar.YEAR)))
+            cal1.add(Calendar.DATE, 1)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("SetTextI18n")
     private fun bottomSheet(day: Day, eventList: List<Event>) {
         val binding = BottomSheetBinding.inflate(LayoutInflater.from(this))
         val bottomSheetDialog =
             BottomSheetDialog(this, R.style.BottomSheetDialog)
+        val size = eventList.size
+        var sheetHeaderText = ""
+        sheetHeaderText = if (size == 0) {
+            if (isScheduleMode) day.date + " (No schedules)" else day.date + " (No memos)"
+        } else {
+            if (size == 1) {
+                if (isScheduleMode) day.date + " (" + eventList.size + " schedule)" else day.date + " (" + eventList.size + " memo)"
+            } else {
+                if (isScheduleMode) day.date + " (" + eventList.size + " schedules)" else day.date + " (" + eventList.size + " memos)"
+            }
+        }
 
-        binding.bottomSheetMaterialTextView.text = day.date + " (" + eventList.size + " memos)"
+        binding.bottomSheetMaterialTextView.text = sheetHeaderText
         binding.bottomSheetNoEventsMaterialTextView.visibility =
             if (eventList.isEmpty()) View.VISIBLE else View.GONE
 
-        binding.bottomSheetRecyclerView.adapter = SheetEventsAdapter(ArrayList(eventList))
+        binding.bottomSheetNoEventsMaterialTextView.text = if (isScheduleMode) "No schedules were found for the selected day." else "No schedules were found for the selected day."
+        val sheetEventsAdapter = SheetEventsAdapter(ArrayList(eventList))
+        binding.bottomSheetRecyclerView.adapter = sheetEventsAdapter
+        sheetEventsAdapter.setOnClickListener(object :
+            SheetEventsAdapter.OnClickListener {
+            override fun onClick(position: Int, model: Event) {
+                showInputDialog(model)
+                bottomSheetDialog.cancel()
+            }
+        })
+
+        sheetEventsAdapter.setOnLongClickListener(object : SheetEventsAdapter.OnLongClickListener {
+            override fun onLongClick(position: Int, model: Event) {
+                if (model.id != null) {
+                    showDeleteConfirmButton(model.id!!)
+                    bottomSheetDialog.cancel()
+                }
+            }
+        })
 
         bottomSheetDialog.setContentView(binding.root)
         bottomSheetDialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         bottomSheetDialog.behavior.skipCollapsed = true
         bottomSheetDialog.setCancelable(true)
-//        binding.addNewMemoButton.setOnClickListener {
-//            showInputDialog("", "")
-//        }
+        binding.addNewMemoButton.text = if (isScheduleMode) "Add schedule" else "Add memo"
+        binding.addNewMemoButton.setOnClickListener {
+            showInputDialog(Event(user?.email, day.date, day.date))
+            bottomSheetDialog.cancel()
+        }
 
         bottomSheetDialog.show()
     }
 
-    data class RandomEventList(
-        var name: String,
-        val color: String,
-    ) {
-        companion object {
-            private val list = ArrayList<RandomEventList>().apply {
-                add(RandomEventList("Meeting", "#e07912"))
-                add(RandomEventList("Vacation", "#4badeb"))
-                add(RandomEventList("Birthday Party", "#ff6f00"))
-                add(RandomEventList("Concert", "#d500f9"))
-                add(RandomEventList("Job Interview", "#7cb342"))
-            }
-
-            fun createRandomEventList(numRandomEvents: Int, callback: (ArrayList<Event>) -> Unit) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val currentDate = Calendar.getInstance()
-                    val currentYear = currentDate.get(Calendar.YEAR)
-
-                    val eventList = arrayListOf<Event>()
-                    val eventsPerMonth = numRandomEvents / 12
-
-                    for (month in 1..12) {
-                        val calendar = Calendar.getInstance().apply {
-                            set(currentYear, month - 1, 1)
-                        }
-                        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-
-                        val randomEvents = arrayListOf<RandomEventList>()
-                        repeat(list.size) {
-                            val randomEvent = list.random()
-                            randomEvents.add(randomEvent)
-                        }
-
-                        val eventsForMonth = arrayListOf<Event>()
-                        for (i in 1..eventsPerMonth) {
-                            val randomEvent = randomEvents.random()
-                            val randomDay = (1..daysInMonth).random()
-                            val dateStr =
-                                String.format("%02d/%02d/%04d", month, randomDay, currentYear)
-                            val newEvent = Event(dateStr, randomEvent.name, randomEvent.color)
-                            eventsForMonth.add(newEvent)
-                        }
-
-//                        eventList.addAll(eventsForMonth.shuffled())
-                    }
-                    eventList.apply {
-                        add(Event("11/16/2023", "Meeting", "#e07912"))
-                        add(Event("11/17/2023", "Meeting", "#e07912"))
-                        add(Event("11/18/2023", "Meeting", "#e07912"))
-                        add(Event("11/13/2023", "Vacation", "#4badeb"))
-                        add(Event("11/14/2023", "Vacation", "#4badeb"))
-                        add(Event("11/15/2023", "Vacation", "#4badeb"))
-                        add(Event("11/14/2023", "Birthday Party", "#ff6f00"))
-                        add(Event("11/09/2023", "Meeting", "#e07912"))
-                        add(Event("11/23/2023", "Meeting", "#e07912"))
-                        add(Event("11/21/2023", "Concert", "#d500f9"))
-                        add(Event("11/15/2023", "Meeting", "#e07912"))
-                        add(Event("11/12/2023", "Meeting", "#e07912"))
-                        add(Event("11/19/2023", "Concert", "#d500f9"))
-                        add(Event("11/20/2023", "Concert", "#d500f9"))
-                        add(Event("11/27/2023", "Job Interview", "#7cb342"))
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        callback.invoke(eventList)
-                    }
+    private fun loadList(callback: (ArrayList<Event>) -> Unit) {
+        val eventList = arrayListOf<Event>()
+        memoDatabaseReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val children = dataSnapshot.children
+                for (postSnapshot in children) {
+                    val event = postSnapshot.getValue<Event>()!!
+                    event.id = postSnapshot.key!!
+                    if (event.email == user?.email) eventList.add(event)
                 }
+                Log.d("initial-memos", eventList.toString())
+                callback(eventList)
             }
-        }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Log.w("error", "loadPost:onCancelled", databaseError.toException())
+            }
+        })
     }
 
-    private inner class BasicActivityWeekViewAdapter(
-        private val dragHandler: (Long, LocalDateTime, LocalDateTime) -> Unit,
+    private fun loadSchedule(callback: (ArrayList<Event>) -> Unit) {
+        val eventList = arrayListOf<Event>()
+        scheduleDatabaseReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val children = dataSnapshot.children
+                for (postSnapshot in children) {
+                    var event = postSnapshot.getValue<Event>()!!
+                    event.id = postSnapshot.key!!
+                    if (event.email == user?.email) eventList.add(event)
+                }
+                Log.d("initial-memos", eventList.toString())
+                callback(eventList)
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Log.w("error", "loadPost:onCancelled", databaseError.toException())
+            }
+        })
+    }
+
+
+    private class StaticActivityWeekViewAdapter(
+        private val rangeChangeHandler: (LocalDate, LocalDate) -> Unit,
         private val loadMoreHandler: (List<YearMonth>) -> Unit
     ) : WeekViewPagingAdapterJsr310<CalendarEntity>() {
 
         override fun onCreateEntity(item: CalendarEntity): WeekViewEntity = item.toWeekViewEntity()
 
-        @RequiresApi(Build.VERSION_CODES.O)
-        override fun onEventClick(data: CalendarEntity, bounds: RectF) {
+        override fun onEventClick(data: CalendarEntity) {
             if (data is CalendarEntity.Event) {
-                val startDate = String.format("%02d/%02d/%04d %02d:%02d", data.startTime.monthValue, data.startTime.dayOfMonth, data.startTime.year, data.startTime.hour, data.startTime.minute)
-                val endDate = String.format("%02d/%02d/%04d %02d:%02d", data.endTime.monthValue, data.endTime.dayOfMonth, data.endTime.year, data.endTime.hour, data.endTime.minute)
-                if (isScheduleMode) {
-                    showScheduleModal(data.title as String, startDate, endDate)
-                } else {
-                    showInputDialog(data.location as String, startDate, endDate)
-                }
-//                context.showToast("Clicked ${data.title}")
+                context.showToast("Clicked ${data.title}")
             }
-        }
-
-        override fun onEventLongClick(data: CalendarEntity, bounds: RectF): Boolean {
-            val alertDialogBuilder = MaterialAlertDialogBuilder(this@MainActivity)
-            alertDialogBuilder.setTitle("Delete schedule")
-            alertDialogBuilder.setMessage("Are you sure you want to delete this schedule?")
-            alertDialogBuilder.setCancelable(false)
-                .setPositiveButton("Delete"
-                ) { _, _ ->
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Schedule has been deleted.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                .setNegativeButton("Cancel"
-                ) { _, _ ->  }
-            alertDialogBuilder.setCancelable(true)
-            alertDialogBuilder.show()
-            return false
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
         override fun onEmptyViewClick(time: LocalDateTime) {
-            val startDate = String.format("%02d/%02d/%04d %02d:%02d", time.monthValue, time.dayOfMonth, time.year, time.hour, 0)
-            val endDate = String.format("%02d/%02d/%04d %02d:%02d", time.monthValue, time.dayOfMonth, time.year, time.hour + 1, 0)
-            if (isScheduleMode) {
-                if (selected) {
-                    showScheduleModal("", selectedDate, startDate)
-                    selected = false
-                } else {
-                    selectedDate = startDate
-                    selected = true
-                }
-            } else {
-                showInputDialog("", startDate, endDate)
-            }
-//            context.showToast("Empty view clicked at ${defaultDateTimeFormatter.format(time)}")
+            context.showToast("Empty view clicked at ${defaultDateTimeFormatter.format(time)}")
         }
 
-        override fun onDragAndDropFinished(data: CalendarEntity, newStartTime: LocalDateTime, newEndTime: LocalDateTime) {
-//            if (data is CalendarEntity.Event) {
-//                dragHandler(data.id, newStartTime, newEndTime)
-//            }
+        override fun onEventLongClick(data: CalendarEntity) {
+            if (data is CalendarEntity.Event) {
+                context.showToast("Long-clicked ${data.title}")
+            }
         }
 
         @RequiresApi(Build.VERSION_CODES.O)
         override fun onEmptyViewLongClick(time: LocalDateTime) {
-//            context.showToast("Empty view long-clicked at ${defaultDateTimeFormatter.format(time)}")
+            context.showToast("Empty view long-clicked at ${defaultDateTimeFormatter.format(time)}")
         }
 
+        @RequiresApi(Build.VERSION_CODES.O)
         override fun onLoadMore(startDate: LocalDate, endDate: LocalDate) {
             loadMoreHandler(yearMonthsBetween(startDate, endDate))
         }
 
-        override fun onVerticalScrollPositionChanged(currentOffset: Float, distance: Float) {
-            Log.d("BasicActivity", "Scrolling vertically (distance: ${distance.toInt()}, current offset ${currentOffset.toInt()})")
-        }
-
-        override fun onVerticalScrollFinished(currentOffset: Float) {
-            Log.d("BasicActivity", "Vertical scroll finished (current offset ${currentOffset.toInt()})")
+        override fun onRangeChanged(firstVisibleDate: LocalDate, lastVisibleDate: LocalDate) {
+            rangeChangeHandler(firstVisibleDate, lastVisibleDate)
         }
     }
 }

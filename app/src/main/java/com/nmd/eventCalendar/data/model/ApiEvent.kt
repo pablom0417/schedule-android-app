@@ -1,4 +1,4 @@
-package com.alamkanak.weekview.sample.data.model
+package com.nmd.eventCalendar.data.model
 
 import android.graphics.Color
 import android.os.Build
