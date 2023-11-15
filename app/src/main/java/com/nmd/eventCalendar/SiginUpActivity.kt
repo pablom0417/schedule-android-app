@@ -34,7 +34,7 @@ import com.nmd.eventCalendarSample.databinding.ActivitySignupBinding
 import java.util.Objects
 import java.util.UUID
 
-class SignUpActivity : AppCompatActivity() {
+class SignUpActivity : BaseActivity() {
     companion object {
         @SuppressLint("StaticFieldLeak")
         lateinit var name: EditText
@@ -160,8 +160,11 @@ class SignUpActivity : AppCompatActivity() {
 
                     progressDialog.dismiss()
                     Log.d("TAG", "createUserWithEmail:success")
-                    openLoginActivity()
                     Toast.makeText(this@SignUpActivity, "Successfully registered!", Toast.LENGTH_SHORT).show()
+                    if (user != null) {
+                        verifyEmail(user)
+                    }
+                    openLoginActivity()
                 } else {
                     progressDialog.dismiss()
                     Log.w("TAG", "createUserWithEmail:failure", task.exception)

@@ -1,28 +1,34 @@
 package com.nmd.eventCalendar
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.ProgressDialog
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.os.Vibrator
+import android.text.InputType
 import android.text.method.HideReturnsTransformationMethod
 import android.text.method.PasswordTransformationMethod
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.google.android.gms.tasks.Task
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivityLoginBinding
+
 
 class LoginActivity : BaseActivity() {
     private lateinit var binding: ActivityLoginBinding
@@ -30,16 +36,20 @@ class LoginActivity : BaseActivity() {
     private var emailPattern = Regex("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z.]+")
     private var progressDialog: ProgressDialog? = null
     var mAuth: FirebaseAuth? = null
+    @RequiresApi(Build.VERSION_CODES.O)
     public override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
         val currentUser = mAuth!!.currentUser
-        if (currentUser != null) {
+        if (currentUser != null && checkIfEmailVerified(currentUser)) {
             currentUser.reload()
             openHomeActivity()
+        } else {
+            Toast.makeText(this, "Please verify your email.", Toast.LENGTH_LONG).show()
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("ClickableViewAccessibility", "CutPasteId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,13 +63,12 @@ class LoginActivity : BaseActivity() {
         signUp = binding.signUp
         progressDialog = ProgressDialog(this)
         mAuth = FirebaseAuth.getInstance()
-        loginButton!!.setOnClickListener(
-            View.OnClickListener {
-                performAuth()
-                val vibrator =
-                    getSystemService(VIBRATOR_SERVICE) as Vibrator
-                vibrator.vibrate(15)
-            })
+        loginButton!!.setOnClickListener {
+            performAuth()
+            val vibrator =
+                getSystemService(VIBRATOR_SERVICE) as Vibrator
+            vibrator.vibrate(15)
+        }
         signUp!!.setOnClickListener(View.OnClickListener { openSignUpActivity() })
         password!!.setOnTouchListener(
             OnTouchListener { _: View?, motionEvent: MotionEvent ->
@@ -96,8 +105,12 @@ class LoginActivity : BaseActivity() {
                 }
                 false
             })
+        forgotPassword!!.setOnClickListener {
+            showRecoverPasswordDialog()
+        }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun openHomeActivity() {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
@@ -110,6 +123,7 @@ class LoginActivity : BaseActivity() {
         vibrator.vibrate(15)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun performAuth() {
         val email = emailAddress!!.text.toString()
         val pass = password!!.text.toString()
@@ -169,6 +183,66 @@ class LoginActivity : BaseActivity() {
                         //updateUI(null);
                     }
                 }
+        }
+    }
+
+    var loadingBar: ProgressDialog? = null
+
+    @SuppressLint("SetTextI18n")
+    private fun showRecoverPasswordDialog() {
+        val layoutInflater = LayoutInflater.from(this@LoginActivity)
+        val promptView: View = layoutInflater.inflate(R.layout.reset_dialog_content, null)
+        val builder: AlertDialog = AlertDialog.Builder(this)
+            .setTitle("Reset Password")
+            .setView(promptView)
+            .setCancelable(false)
+            .setPositiveButton("Send", null)
+            .setNegativeButton("Cancel"
+            ) { dialog, _ -> dialog.dismiss() }
+            .create()
+
+        val resetRequestEmail = promptView.findViewById<View>(R.id.resetRequestEmail) as TextInputLayout
+        resetRequestEmail.editText?.textSize = 14F
+
+        builder.show()
+        // Click on Recover and a email will be sent to your registered email id
+        val positiveButton = builder.getButton(AlertDialog.BUTTON_POSITIVE)
+        // setup a dialog window
+        positiveButton.setOnClickListener { _ ->
+            val email = resetRequestEmail.editText?.text.toString().trim { it <= ' ' }
+            beginRecovery(email)
+        }
+        builder.show()
+    }
+
+    private fun beginRecovery(email: String) {
+        loadingBar = ProgressDialog(this)
+        loadingBar!!.setMessage("Sending Email....")
+        loadingBar!!.setCanceledOnTouchOutside(false)
+        loadingBar!!.show()
+
+        mAuth!!.sendPasswordResetEmail(email).addOnCompleteListener { task ->
+            loadingBar!!.dismiss()
+            if (task.isSuccessful) {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Reset email was successfully sent",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "An error was occurred.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }.addOnFailureListener {
+            loadingBar!!.dismiss()
+            Toast.makeText(
+                this@LoginActivity,
+                "Error Failed",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

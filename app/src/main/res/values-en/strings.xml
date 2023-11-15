@@ -19,7 +19,7 @@
     <string name="logout">Log Out</string>
     <string name="navigation_drawer_open">Open</string>
     <string name="navigation_drawer_close">Close</string>
-    <string name="request_users">Request Users</string>
+    <string name="request_users">All Users</string>
     <string name="month_view">Monthly View</string>
     <string name="end_time">End Time</string>
     <string name="start_time">Start Time</string>

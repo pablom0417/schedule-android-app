@@ -98,6 +98,7 @@ open class MainActivity : BaseActivity() {
     var userDatabaseReference = firebaseDatabase.child("users")
     var memo: Event? = null
     var email: String? = user?.email
+    var displayName: String? = user?.displayName
     var schedules: ArrayList<Event> = ArrayList()
 
     private val viewModel by genericViewModel()
@@ -135,11 +136,11 @@ open class MainActivity : BaseActivity() {
             eventCalendarView.visibility = View.GONE
             switchLayout.visibility = View.GONE
             backButton.visibility = View.INVISIBLE
-            floatingActionButton.visibility = View.VISIBLE
+            floatingActionButton.visibility = View.GONE
             calendarStatus.text = "My Calendar"
             drawerLayout.closeDrawer(navView)
             if (email != user?.email) {
-                calendarStatus.text = "${email}'s Calendar"
+                calendarStatus.text = "${displayName}'s Calendar"
                 backButton.visibility = View.VISIBLE
                 floatingActionButton.visibility = View.GONE
             }
@@ -237,6 +238,7 @@ open class MainActivity : BaseActivity() {
 
             backButton.setOnClickListener {
                 email = user?.email
+                displayName = user?.displayName
                 initialize()
 //                loadList(email!!) {
 //                    eventCalendarView.events = it
@@ -319,15 +321,6 @@ open class MainActivity : BaseActivity() {
                     Log.i("ECV", "Scrolled to: $month $year")
                 }
             })
-
-            eventCalendarNotificationImageView.setOnClickListener {it ->
-                Snackbar.make(
-                    it,
-                    "John Doe have added a new schedule",
-                    Snackbar.LENGTH_LONG
-                ).setBackgroundTint(Color.parseColor("#e18900"))
-                    .setAction("Visit") { showAcceptConfirmDialog(dataModels!![0]) }.show()
-            }
 
             sideLogoutButton.setOnClickListener {
                 showLogoutConfirmDialog()
@@ -675,6 +668,7 @@ open class MainActivity : BaseActivity() {
             .setPositiveButton("Yes"
             ) { _, _ ->
                 email = dataModel.email
+                displayName = dataModel.displayName
                 initialize()
 //                loadList(email!!) {
 //                    binding.eventCalendarView.events = it

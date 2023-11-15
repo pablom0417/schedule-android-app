@@ -34,27 +34,6 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:id="@+id/eventCalendarNotificationImageView"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="?android:attr/actionBarItemBackground"
-                        android:padding="16dp"
-                        android:src="@android:drawable/stat_notify_chat"
-                        android:theme="@style/RippleColor"
-                        app:tint="@color/white" />
-                    <TextView
-                        android:layout_width="15dp"
-                        android:layout_height="15dp"
-                        android:text="1"
-                        android:textColor="@color/white"
-                        android:gravity="center"
-                        android:textSize="11sp"
-                        android:background="@drawable/background_rounded"
-                        android:backgroundTint="@color/badgeColor"
-                        android:layout_marginStart="-20dp"
-                        android:layout_marginTop="10dp" />
-
-                    <ImageView
                         android:id="@+id/eventCalendarViewCalendarImageView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -147,7 +126,6 @@
                 android:layout_gravity="center" />
 
             <LinearLayout
-                android:id="@+id/switchLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -161,7 +139,7 @@
                     android:gravity="center"
                     android:text="@string/my_calendar"
                     android:textColor="@color/ecv_white"
-                    android:textSize="24sp"
+                    android:textSize="20sp"
                     />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/back_button"
@@ -176,6 +154,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/switchLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top">
