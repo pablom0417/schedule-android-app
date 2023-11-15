@@ -9,22 +9,35 @@
     android:background="@drawable/login_background"
     tools:context="com.nmd.eventCalendar.SignUpActivity">
 
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/avatarImageView"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/avatar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/signupText"
+        app:layout_constraintVertical_bias="0.080"
+        app:shapeAppearanceOverlay="@style/Circular" />
+
     <TextView
         android:id="@+id/signupText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/sf_pro_display_bold"
+        android:gravity="center"
         android:text="@string/sign_up"
+        android:textColor="@color/white"
         android:textSize="32sp"
         android:textStyle="bold"
-        android:textColor="@color/white"
-        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.150" />
+        app:layout_constraintVertical_bias="0.081" />
 
     <EditText
         android:id="@+id/name"
@@ -45,7 +58,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/signupText"
+        app:layout_constraintTop_toBottomOf="@+id/avatarImageView"
         app:layout_constraintVertical_bias="0.080"
         tools:ignore="UnusedAttribute" />
 

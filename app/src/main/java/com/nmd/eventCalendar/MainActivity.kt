@@ -5,8 +5,9 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.RectF
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Vibrator
@@ -20,7 +21,6 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import com.alamkanak.weekview.WeekViewEntity
 import com.alamkanak.weekview.jsr310.WeekViewPagingAdapterJsr310
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -48,10 +48,12 @@ import com.nmd.eventCalendar.util.defaultDateTimeFormatter
 import com.nmd.eventCalendar.util.genericViewModel
 import com.nmd.eventCalendar.util.showToast
 import com.nmd.eventCalendar.util.yearMonthsBetween
-import com.nmd.eventCalendar.utils.Utils.Companion.getActivity
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivityMainBinding
 import com.nmd.eventCalendarSample.databinding.BottomSheetBinding
+import com.squareup.picasso.Callback
+import com.squareup.picasso.Picasso
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -60,7 +62,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
-open class MainActivity : AppCompatActivity() {
+open class MainActivity : BaseActivity() {
     private lateinit var binding: ActivityMainBinding
     private var selected: Boolean = false
     private var selectedDate: String = ""
@@ -136,6 +138,29 @@ open class MainActivity : AppCompatActivity() {
 
             val navHeader: View = navView.getHeaderView(0)
             val username = navHeader.findViewById(R.id.textViewUserName) as TextView
+            val imageviewProfileImage = navHeader.findViewById(R.id.imageviewProfileImage) as ImageView
+
+            val avatarImageUri = mPrefs?.avatarUrl
+            if (avatarImageUri != "") {
+                Picasso.get().load(avatarImageUri).into(imageviewProfileImage, object : Callback {
+                    override fun onSuccess() {
+                        // Convert the selected image into a ByteArray
+                        val bitmap = (imageviewProfileImage.drawable as BitmapDrawable?)?.bitmap
+                        val baos = ByteArrayOutputStream()
+                        bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                        val data: ByteArray? = baos.toByteArray()
+
+                        // Use the 'data' to store the avatar image in Firebase along with other user details
+                        // For example, you can call a separate function that handles the signup process and passes the 'data' along with other fields.
+                        // signUpUser(fullName, email, password, data)
+                    }
+
+                    override fun onError(e: Exception?) {
+                        // Handle error loading the image
+                    }
+                })
+            }
+
 
             user = FirebaseAuth.getInstance().currentUser
             if (user != null) {

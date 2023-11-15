@@ -2,7 +2,9 @@ package com.nmd.eventCalendar
 
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Vibrator
 import android.text.method.HideReturnsTransformationMethod
@@ -15,14 +17,14 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivityLoginBinding
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseActivity() {
     private lateinit var binding: ActivityLoginBinding
     var passwordVisible = false
     private var emailPattern = Regex("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z.]+")
@@ -126,6 +128,21 @@ class LoginActivity : AppCompatActivity() {
                 .addOnCompleteListener { task: Task<AuthResult?> ->
                     if (task.isSuccessful) {
                         progressDialog!!.dismiss()
+
+                        val currentUser: FirebaseUser? = mAuth!!.currentUser
+                        if (currentUser != null) {
+                            val path = currentUser.photoUrl?.path
+                            if (path == null){
+                                mPrefs?.avatarUrl = ""
+                            }else{
+                                mPrefs?.avatarUrl = currentUser?.photoUrl.toString()
+                            }
+
+                            mPrefs?.username = currentUser.displayName
+                            mPrefs?.email = email
+                            mPrefs?.password = pass
+                        }
+
                         // Sign in success, update UI with the signed-in user's information
                         Log.d("TAG", "signInWithEmail:success")
                         // updateUI(user);
