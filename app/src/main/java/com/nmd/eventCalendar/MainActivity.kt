@@ -7,6 +7,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import android.os.Bundle
@@ -23,6 +24,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import com.alamkanak.weekview.WeekViewEntity
 import com.alamkanak.weekview.jsr310.WeekViewPagingAdapterJsr310
+import com.alamkanak.weekview.jsr310.setDateFormatter
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -44,9 +46,11 @@ import com.nmd.eventCalendar.`interface`.EventCalendarDayClickListener
 import com.nmd.eventCalendar.`interface`.EventCalendarScrollListener
 import com.nmd.eventCalendar.model.Day
 import com.nmd.eventCalendar.model.Event
+import com.nmd.eventCalendar.util.GenericAction
 import com.nmd.eventCalendar.util.defaultDateTimeFormatter
 import com.nmd.eventCalendar.util.genericViewModel
 import com.nmd.eventCalendar.util.showToast
+import com.nmd.eventCalendar.util.subscribeToEvents
 import com.nmd.eventCalendar.util.yearMonthsBetween
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivityMainBinding
@@ -62,6 +66,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
+@RequiresApi(Build.VERSION_CODES.O)
 open class MainActivity : BaseActivity() {
     private lateinit var binding: ActivityMainBinding
     private var selected: Boolean = false
@@ -95,10 +100,10 @@ open class MainActivity : BaseActivity() {
     private var adapter: CustomAdapter? = null
 
 
-    private val weekViewAdapter: StaticActivityWeekViewAdapter by lazy {
-        StaticActivityWeekViewAdapter(
-            loadMoreHandler = this::onLoadMore,
-            rangeChangeHandler = this::onRangeChanged
+    private val weekViewAdapter: BasicActivityWeekViewAdapter by lazy {
+        BasicActivityWeekViewAdapter(
+            dragHandler = viewModel::handleDrag,
+            loadMoreHandler = viewModel::fetchEvents,
         )
     }
 
@@ -187,6 +192,27 @@ open class MainActivity : BaseActivity() {
             )
 
             weekCalendarView.adapter = weekViewAdapter
+
+            weekCalendarView.setDateFormatter { date: LocalDate ->
+                val weekdayLabel = weekdayFormatter.format(date)
+                val dateLabel = dateFormatter.format(date)
+                weekdayLabel + "\n" + dateLabel
+            }
+
+            viewModel.viewState.observe(this@MainActivity) { viewState ->
+                weekViewAdapter.submitList(viewState.entities)
+            }
+
+            viewModel.actions.subscribeToEvents(this@MainActivity) { action ->
+                when (action) {
+                    is GenericAction.ShowSnackbar -> {
+                        Snackbar
+                            .make(weekCalendarView, action.message, Snackbar.LENGTH_SHORT)
+                            .setAction("Undo") { action.undoAction() }
+                            .show()
+                    }
+                }
+            }
 
             eventCalendarViewCalendarImageView.setOnClickListener {
                 eventCalendarView.scrollToCurrentMonth(false)
@@ -815,43 +841,43 @@ open class MainActivity : BaseActivity() {
         })
     }
 
-
-    private class StaticActivityWeekViewAdapter(
-        private val rangeChangeHandler: (LocalDate, LocalDate) -> Unit,
+    private class BasicActivityWeekViewAdapter(
+        private val dragHandler: (Long, LocalDateTime, LocalDateTime) -> Unit,
         private val loadMoreHandler: (List<YearMonth>) -> Unit
     ) : WeekViewPagingAdapterJsr310<CalendarEntity>() {
 
         override fun onCreateEntity(item: CalendarEntity): WeekViewEntity = item.toWeekViewEntity()
 
-        override fun onEventClick(data: CalendarEntity) {
+        override fun onEventClick(data: CalendarEntity, bounds: RectF) {
             if (data is CalendarEntity.Event) {
                 context.showToast("Clicked ${data.title}")
             }
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
         override fun onEmptyViewClick(time: LocalDateTime) {
             context.showToast("Empty view clicked at ${defaultDateTimeFormatter.format(time)}")
         }
 
-        override fun onEventLongClick(data: CalendarEntity) {
+        override fun onDragAndDropFinished(data: CalendarEntity, newStartTime: LocalDateTime, newEndTime: LocalDateTime) {
             if (data is CalendarEntity.Event) {
-                context.showToast("Long-clicked ${data.title}")
+                dragHandler(data.id, newStartTime, newEndTime)
             }
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
         override fun onEmptyViewLongClick(time: LocalDateTime) {
             context.showToast("Empty view long-clicked at ${defaultDateTimeFormatter.format(time)}")
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
         override fun onLoadMore(startDate: LocalDate, endDate: LocalDate) {
             loadMoreHandler(yearMonthsBetween(startDate, endDate))
         }
 
-        override fun onRangeChanged(firstVisibleDate: LocalDate, lastVisibleDate: LocalDate) {
-            rangeChangeHandler(firstVisibleDate, lastVisibleDate)
+        override fun onVerticalScrollPositionChanged(currentOffset: Float, distance: Float) {
+            Log.d("BasicActivity", "Scrolling vertically (distance: ${distance.toInt()}, current offset ${currentOffset.toInt()})")
+        }
+
+        override fun onVerticalScrollFinished(currentOffset: Float) {
+            Log.d("BasicActivity", "Vertical scroll finished (current offset ${currentOffset.toInt()})")
         }
     }
 }

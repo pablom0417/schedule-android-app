@@ -26,6 +26,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.userProfileChangeRequest
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivitySignupBinding
@@ -104,6 +106,7 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     private fun performAuth() {
+        var displayName = name.text.toString()
         val email = emailAddress1.text.toString()
         val password = password1.text.toString()
         val avatarImage = avatarImageUri.toString()
@@ -125,8 +128,34 @@ class SignUpActivity : AppCompatActivity() {
 
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+                    val database = FirebaseDatabase.getInstance()
+                    val usersRef = database.getReference("users")
+                    var fcmToken: String? = null
+
+                    // Retrieve the FCM token
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // Get new FCM registration token
+                            val token = task.result
+                            fcmToken = token
+                            Log.d("TAG", "FCM registration token: $fcmToken")
+
+                            val newUserRef = usersRef.push()
+                            newUserRef.child("email").setValue(email)
+                            newUserRef.child("displayName").setValue(displayName)
+                            newUserRef.child("token").setValue(fcmToken)
+                        } else {
+                            Log.d("TAG", "Fetching FCM registration token failed", task.exception)
+                        }
+                    }
+
+                    Log.d("TAG" ,"$fcmToken")
+
                     val user = mAuth.currentUser
 
+                    user?.updateProfile(userProfileChangeRequest {
+                        setDisplayName(displayName)
+                    })
                     uploadAvatarImage(user)
 
                     progressDialog.dismiss()
