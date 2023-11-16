@@ -1,12 +1,10 @@
 package com.nmd.eventCalendar
-
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
@@ -620,51 +618,6 @@ open class MainActivity : BaseActivity() {
                 }
             }
         }
-    }
-
-    private fun showScheduleModal(prevSchedule: String, start: String, end: String) {
-        val alertDialogBuilder = MaterialAlertDialogBuilder(this)
-        alertDialogBuilder.setTitle("Add Schedule Content")
-        val promptView = LayoutInflater.from(this).inflate(com.nmd.eventCalendar.R.layout.add_schedule_content, null)
-        alertDialogBuilder.setView(promptView)
-        val startDate = promptView.findViewById<View>(com.nmd.eventCalendar.R.id.schedule_start_date) as TextInputLayout
-        val endDate = promptView.findViewById<View>(com.nmd.eventCalendar.R.id.schedule_end_date) as TextInputLayout
-        val scheduleContent = promptView.findViewById<View>(com.nmd.eventCalendar.R.id.schedule_content) as TextInputLayout
-        if (start.split("/")[0].toInt() <= end.split("/")[0].toInt() && start.split("/")[1].toInt() <= end.split("/")[1].toInt()) {
-            startDate.editText?.setText(start)
-            endDate.editText?.setText(end)
-        } else {
-            startDate.editText?.setText(end)
-            endDate.editText?.setText(start)
-        }
-        scheduleContent.editText?.setText(prevSchedule)
-        startDate.editText?.setOnFocusChangeListener { v, hasFocus ->
-            if (hasFocus) {
-                pickDate(startDate.editText!!)
-            }
-        }
-        endDate.editText?.setOnFocusChangeListener { v, hasFocus ->
-            if (hasFocus) {
-                pickDate(endDate.editText!!)
-            }
-        }
-        alertDialogBuilder.setCancelable(false)
-            .setPositiveButton("Save"
-            ) { _, _ ->
-                Toast.makeText(
-                    this,
-                    "New schedule has been added.",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            .setNegativeButton("Cancel"
-            ) { _, _ ->
-
-            }
-
-        // create an alert dialog
-        alertDialogBuilder.setCancelable(true)
-        alertDialogBuilder.show()
     }
 
     @SuppressLint("SetTextI18n")

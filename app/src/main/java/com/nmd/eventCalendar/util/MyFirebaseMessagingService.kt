@@ -8,16 +8,12 @@ import android.content.Intent
 import android.media.RingtoneManager
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.nmd.eventCalendar.MainActivity
-
 import com.nmd.eventCalendarSample.R
+
 //import com.google.firebase.quickstart.fcm.databinding.ActivityMainBinding
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {

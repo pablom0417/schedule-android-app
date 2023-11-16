@@ -36,10 +36,6 @@
             android:name="com.nmd.eventCalendar.MainActivity"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />
-        <activity
-            android:name="com.nmd.eventCalendar.InvitationActivity"
-            android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity" />
         <service
             android:name="com.nmd.eventCalendar.util.MyFirebaseMessagingService"
             android:exported="false">

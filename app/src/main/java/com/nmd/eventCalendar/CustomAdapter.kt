@@ -1,15 +1,12 @@
 package com.nmd.eventCalendar
 
 import android.content.Context
-import android.opengl.Visibility
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.ImageView
 import android.widget.TextView
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.textview.MaterialTextView
 import com.nmd.eventCalendar.model.User
 import com.nmd.eventCalendarSample.R
 

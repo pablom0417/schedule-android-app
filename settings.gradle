@@ -15,8 +15,6 @@ dependencyResolutionManagement {
 rootProject.name = "EventCalendar"
 include ':app'
 include ':library'
-include ':library2'
-include ':emoji'
 include ':base'
 include ':core'
 include ':jsr310'
