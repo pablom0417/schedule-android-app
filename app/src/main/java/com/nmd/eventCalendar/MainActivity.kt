@@ -134,9 +134,12 @@ open class MainActivity : BaseActivity() {
             }
             progressBar.visibility = View.VISIBLE
             eventCalendarView.visibility = View.GONE
+            weekCalendarView.visibility = View.GONE
             switchLayout.visibility = View.GONE
             backButton.visibility = View.INVISIBLE
             floatingActionButton.visibility = View.GONE
+            addSwitch.isChecked = false
+            viewSwitch.isChecked = false
             calendarStatus.text = "My Calendar"
             drawerLayout.closeDrawer(navView)
             if (email != user?.email) {
@@ -715,6 +718,7 @@ open class MainActivity : BaseActivity() {
 
                         FirebaseAuth.getInstance().signOut()
                         openLoginActivity()
+                        finish()
                         Toast.makeText(
                             this@MainActivity,
                             "Successfully signed out!",
@@ -835,27 +839,6 @@ open class MainActivity : BaseActivity() {
         startActivity(intent)
         val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
         vibrator.vibrate(15)
-    }
-
-    @SuppressLint("SimpleDateFormat")
-    private fun getAllDates(mDate1: String, mDate2: String) {
-        // Creating a date format
-        val mDateFormat = SimpleDateFormat("MM/dd/yyyy")
-
-        // Converting the dates
-        // from string to date format
-        val mDate11 = mDateFormat.parse(mDate1)
-        val mDate22 = mDateFormat.parse(mDate2)
-        val cal1 = Calendar.getInstance()
-        cal1.time = mDate11!!
-
-        val cal2 = Calendar.getInstance()
-        cal2.time = mDate22!!
-
-        while (!cal1.after(cal2)) {
-            Log.d("all dates", String.format("%02d/%02d/%04d", cal1.get(Calendar.MONTH) + 1, cal1.get(Calendar.DAY_OF_MONTH), cal1.get(Calendar.YEAR)))
-            cal1.add(Calendar.DATE, 1)
-        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
