@@ -210,8 +210,10 @@ class LoginActivity : BaseActivity() {
         // setup a dialog window
         positiveButton.setOnClickListener { _ ->
             val email = resetRequestEmail.editText?.text.toString().trim { it <= ' ' }
-            beginRecovery(email)
-            builder.dismiss()
+            if (email != "") {
+                beginRecovery(email)
+                builder.dismiss()
+            }
         }
         builder.show()
     }
