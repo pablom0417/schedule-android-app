@@ -196,7 +196,13 @@ open class MainActivity : BaseActivity() {
                 eventCalendarView.post {
                     progressBar.visibility = View.GONE
                     switchLayout.visibility = View.VISIBLE
-                    if (isWeekView) weekCalendarView.visibility = View.VISIBLE else eventCalendarView.visibility = View.VISIBLE
+                    if (isWeekView) {
+                        weekCalendarView.visibility = View.VISIBLE
+                        floatingActionButton.visibility = View.GONE
+                    } else {
+                        if (email == user?.email) floatingActionButton.visibility = View.VISIBLE
+                        eventCalendarView.visibility = View.VISIBLE
+                    }
                 }
             }
 
