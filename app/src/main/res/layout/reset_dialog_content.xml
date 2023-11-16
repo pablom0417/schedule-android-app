@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="2"
         android:padding="10dp"
-        android:hint="@string/start_date">
+        android:hint="@string/email_address">
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

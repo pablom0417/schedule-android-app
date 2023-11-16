@@ -45,7 +45,7 @@ class LoginActivity : BaseActivity() {
             currentUser.reload()
             openHomeActivity()
         } else {
-            Toast.makeText(this, "Please verify your email.", Toast.LENGTH_LONG).show()
+//            Toast.makeText(this, "Please verify your email.", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -211,6 +211,7 @@ class LoginActivity : BaseActivity() {
         positiveButton.setOnClickListener { _ ->
             val email = resetRequestEmail.editText?.text.toString().trim { it <= ' ' }
             beginRecovery(email)
+            builder.dismiss()
         }
         builder.show()
     }
