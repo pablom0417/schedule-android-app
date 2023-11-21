@@ -36,12 +36,15 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    kotlin {
-        jvmToolchain(17)
+    kotlinOptions {
+        jvmTarget = '17'
     }
     configurations {
         all {
             exclude group :"org.threeten", module: "threetenbp"
+            exclude module: "httpclient"
+            exclude module: "proto-google-common-protos"
+            exclude module: "protobuf-java"
         }
     }
     packagingOptions {
@@ -57,10 +60,10 @@ dependencies {
     implementation "com.google.android.gms:play-services-gcm:17.0.0"
     implementation platform('com.google.firebase:firebase-bom:30.3.1')
     implementation 'com.google.firebase:firebase-auth'
-    implementation 'com.google.firebase:firebase-auth-ktx:22.2.0'
+    implementation 'com.google.firebase:firebase-auth-ktx'
     implementation 'com.google.firebase:firebase-storage-ktx:20.3.0'
-    implementation 'com.google.firebase:firebase-database-ktx:20.3.0'
-    implementation 'com.google.firebase:firebase-database:20.3.0'
+//    implementation 'com.google.firebase:firebase-database-ktx:20.3.0'
+//    implementation 'com.google.firebase:firebase-database:20.3.0'
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.jakewharton.threetenabp:threetenabp:1.4.6'
     implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.9'
@@ -69,6 +72,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation 'com.google.firebase:firebase-appdistribution-gradle:4.0.1'
     implementation 'androidx.work:work-runtime-ktx:2.8.1'
+    implementation 'com.google.firebase:firebase-firestore-ktx:24.9.1'
     testImplementation("org.threeten:threetenbp:1.6.8") {
         exclude module: "com.jakewharton.threetenabp:threetenabp:1.4.6"
     }

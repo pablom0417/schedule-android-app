@@ -148,6 +148,7 @@
                     android:layout_weight="7"
                     android:layout_gravity="center|end"
                     android:textColor="@color/ecv_white"
+                    app:strokeColor="@color/ecv_white"
                     style="@style/Widget.Material3.Button.IconButton.Outlined"
                     android:text="@string/back_to_mine"
                     />
@@ -159,18 +160,10 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="top">
 
-                <Switch
-                    android:id="@+id/add_switch"
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="@string/add_memo"
-                    android:textColor="@color/colorDarkGreen"
-                    android:textSize="16sp"
-                    tools:ignore="UseSwitchCompatOrMaterialXml" />
+                    android:layout_weight="1" />
 
                 <Switch
                     android:id="@+id/view_switch"

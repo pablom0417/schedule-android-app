@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    android:layout_height="match_parent"
+<LinearLayout android:layout_height="match_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,7 +13,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="2"
             android:padding="10dp"
-            android:hint="@string/start_date">
+            android:hint="@string/start_date"
+            app:expandedHintEnabled="false">
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -25,7 +26,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="3"
             android:padding="10dp"
-            android:hint="@string/start_time">
+            android:hint="@string/start_time"
+            app:expandedHintEnabled="false">
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,7 +43,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="2"
             android:padding="10dp"
-            android:hint="@string/end_date">
+            android:hint="@string/end_date"
+            app:expandedHintEnabled="false">
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -54,7 +57,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="3"
             android:padding="10dp"
-            android:hint="@string/end_time">
+            android:hint="@string/end_time"
+            app:expandedHintEnabled="false">
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -67,7 +71,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
-        android:hint="@string/memo">
+        android:hint="@string/memo"
+        app:expandedHintEnabled="false">
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

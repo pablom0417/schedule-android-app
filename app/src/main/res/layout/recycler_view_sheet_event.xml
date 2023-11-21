@@ -12,16 +12,37 @@
     app:cardElevation="0dp"
     app:strokeWidth="0dp">
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/itemEventMaterialTextView"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="none"
-        android:gravity="center"
-        android:padding="16dp"
-        android:singleLine="true"
-        android:minLines="2"
-        android:textColor="@color/ecv_charcoal_color"
-        tools:text="Vacation" />
+        android:padding="5dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/itemEventMaterialTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:ellipsize="none"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:minLines="2"
+            android:textColor="@color/ecv_charcoal_color"
+            tools:text="Vacation" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/itemEventMaterialButton"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:icon="@android:drawable/ic_menu_add"
+            app:iconSize="30sp"
+            app:strokeWidth="0dp"
+            android:padding="0dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            app:iconGravity="start"
+            android:layout_weight="4" />
+
+    </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

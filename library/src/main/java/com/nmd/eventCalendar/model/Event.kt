@@ -13,5 +13,6 @@ data class Event(
     val endTime: String? = null,
     val name: String? = null,
     val backgroundHexColor: String? = null,
-    var id: String? = null
+    var id: String? = null,
+    var memos: ArrayList<Memo>? = null
 ) : Parcelable

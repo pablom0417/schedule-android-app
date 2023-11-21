@@ -8,6 +8,7 @@ import android.text.style.TypefaceSpan
 import com.alamkanak.weekview.WeekViewEntity
 import com.alamkanak.weekview.jsr310.setEndTime
 import com.alamkanak.weekview.jsr310.setStartTime
+import com.nmd.eventCalendar.utils.Utils.Companion.isDarkColor
 import com.nmd.eventCalendarSample.R
 import java.time.LocalDateTime
 
@@ -23,25 +24,18 @@ sealed class CalendarEntity {
         val isAllDay: Boolean,
         val isCanceled: Boolean
     ) : CalendarEntity()
-
-    data class BlockedTimeSlot(
-        val id: Long,
-        val startTime: LocalDateTime,
-        val endTime: LocalDateTime
-    ) : CalendarEntity()
 }
 
 fun CalendarEntity.toWeekViewEntity(): WeekViewEntity {
     return when (this) {
         is CalendarEntity.Event -> toWeekViewEntity()
-        is CalendarEntity.BlockedTimeSlot -> toWeekViewEntity()
     }
 }
 
 fun CalendarEntity.Event.toWeekViewEntity(): WeekViewEntity {
-    val backgroundColor = if (location.split(" ")[0] != "memo") color else Color.WHITE
-    val textColor = if (location.split(" ")[0] != "memo") Color.WHITE else color
-    val borderWidthResId = if (location.split(" ")[0] != "memo") R.dimen.no_border_width else R.dimen.border_width
+    val backgroundColor = color
+    val textColor = if (color.isDarkColor()) Color.WHITE else Color.BLACK
+    val borderWidthResId = R.dimen.no_border_width
 
     val style = WeekViewEntity.Style.Builder()
         .setTextColor(textColor)
@@ -65,7 +59,7 @@ fun CalendarEntity.Event.toWeekViewEntity(): WeekViewEntity {
     }
 
     var type = ""
-    if (location.split(" ")[0] == "memo") type = "- M -"
+    type = if (location != "") "✔ $location" else ""
 
     return WeekViewEntity.Event.Builder(this)
         .setId(id)
@@ -74,20 +68,6 @@ fun CalendarEntity.Event.toWeekViewEntity(): WeekViewEntity {
         .setEndTime(endTime)
         .setSubtitle(type)
         .setAllDay(isAllDay)
-        .setStyle(style)
-        .build()
-}
-
-fun CalendarEntity.BlockedTimeSlot.toWeekViewEntity(): WeekViewEntity {
-    val style = WeekViewEntity.Style.Builder()
-        .setBackgroundColorResource(R.color.colorCharcoalGray)
-        .setCornerRadius(0)
-        .build()
-
-    return WeekViewEntity.BlockedTime.Builder()
-        .setId(id)
-        .setStartTime(startTime)
-        .setEndTime(endTime)
         .setStyle(style)
         .build()
 }

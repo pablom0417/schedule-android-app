@@ -7,11 +7,12 @@
     <string name="ecv_day_name_saturday">S</string>
     <string name="ecv_day_name_sunday">S</string>
     <string name="date">Date</string>
-    <string name="memo">Memo</string>
+    <string name="memo_label">Memo</string>
     <string name="add_memo">Add memo</string>
     <string name="schedule_content">Schedule Content</string>
     <string name="start_date">Start Date</string>
     <string name="end_date">End Date</string>
+    <string name="input_memo">Input Memo</string>
 
     <string-array name="ecv_month_names">
         <item>Januar</item>

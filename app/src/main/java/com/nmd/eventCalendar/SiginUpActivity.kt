@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -19,12 +20,18 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.userProfileChangeRequest
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.auth.ktx.userProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+//import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
+import com.nmd.eventCalendar.model.User
 import com.nmd.eventCalendarSample.R
 import com.nmd.eventCalendarSample.databinding.ActivitySignupBinding
 import java.util.UUID
@@ -58,7 +65,7 @@ class SignUpActivity : BaseActivity() {
         supportActionBar?.hide()
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
         password1 = binding.password1
         name = binding.name
         emailAddress1 = binding.emailAddress1
@@ -100,6 +107,33 @@ class SignUpActivity : BaseActivity() {
         login.setOnClickListener { openLoginActivity() }
     }
 
+    private val onBackPressedCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@SignUpActivity)
+            alertDialogBuilder.setTitle("Finish")
+            alertDialogBuilder.setMessage("Are you sure you want to exit this app?")
+            // setup a dialog window
+            alertDialogBuilder.setCancelable(false)
+                .setPositiveButton("Yes",
+                    DialogInterface.OnClickListener { dialog, id ->
+                        run {
+                            finish()
+                            Toast.makeText(
+                                this@SignUpActivity,
+                                "The app is closed.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    })
+                .setNegativeButton("No",
+                    DialogInterface.OnClickListener { dialog, id ->  })
+
+            // create an alert dialog
+            alertDialogBuilder.setCancelable(true)
+            alertDialogBuilder.show()
+        }
+    }
+
     private fun performAuth() {
         var displayName = name.text.toString()
         val email = emailAddress1.text.toString()
@@ -123,8 +157,10 @@ class SignUpActivity : BaseActivity() {
 
             mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val database = FirebaseDatabase.getInstance()
-                    val usersRef = database.getReference("users")
+//                    val database = FirebaseDatabase.getInstance()
+//                    val usersRef = database.getReference("users")
+                    val db = FirebaseFirestore.getInstance()
+                    val usersRef = db.collection("users")
                     var fcmToken: String? = null
 
                     // Retrieve the FCM token
@@ -135,31 +171,40 @@ class SignUpActivity : BaseActivity() {
                             fcmToken = token
                             Log.d("TAG", "FCM registration token: $fcmToken")
 
-                            val newUserRef = usersRef.push()
-                            newUserRef.child("email").setValue(email)
-                            newUserRef.child("displayName").setValue(displayName)
-                            newUserRef.child("token").setValue(fcmToken)
+                            val newUser = hashMapOf(
+                                "displayName" to displayName,
+                                "email" to email,
+                                "token" to token
+                            )
+                            usersRef.add(newUser).addOnSuccessListener {
+                                Log.d("add-success", "Success")
+                            }.addOnFailureListener {
+                                Log.d("add-failure", "Failed")
+                            }
+//                            newUserRef.child("email").setValue(email)
+//                            newUserRef.child("displayName").setValue(displayName)
+//                            newUserRef.child("token").setValue(fcmToken)
+
+                            Log.d("TAG" ,"$fcmToken")
+
+                            val user = mAuth.currentUser
+
+                            user?.updateProfile(userProfileChangeRequest {
+                                setDisplayName(displayName)
+                            })
+                            uploadAvatarImage(user)
+
+                            progressDialog.dismiss()
+                            Log.d("TAG", "createUserWithEmail:success")
+                            Toast.makeText(this@SignUpActivity, "Successfully registered!", Toast.LENGTH_SHORT).show()
+                            if (user != null) {
+                                verifyEmail(user)
+                            }
+                            openLoginActivity()
                         } else {
                             Log.d("TAG", "Fetching FCM registration token failed", task.exception)
                         }
                     }
-
-                    Log.d("TAG" ,"$fcmToken")
-
-                    val user = mAuth.currentUser
-
-                    user?.updateProfile(userProfileChangeRequest {
-                        setDisplayName(displayName)
-                    })
-                    uploadAvatarImage(user)
-
-                    progressDialog.dismiss()
-                    Log.d("TAG", "createUserWithEmail:success")
-                    Toast.makeText(this@SignUpActivity, "Successfully registered!", Toast.LENGTH_SHORT).show()
-                    if (user != null) {
-                        verifyEmail(user)
-                    }
-                    openLoginActivity()
                 } else {
                     progressDialog.dismiss()
                     Log.w("TAG", "createUserWithEmail:failure", task.exception)
@@ -192,6 +237,7 @@ class SignUpActivity : BaseActivity() {
         startActivity(intent)
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         vibrator.vibrate(15)
+        finish()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

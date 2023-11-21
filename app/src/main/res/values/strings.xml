@@ -15,7 +15,7 @@
     <string name="dialog_title">Add memo</string>
     <string name="start_date">Start Date</string>
     <string name="end_date">End Date</string>
-    <string name="memo">Memo</string>
+    <string name="memo">Note</string>
     <string name="logout">Sign Out</string>
     <string name="navigation_drawer_open">Open</string>
     <string name="navigation_drawer_close">Close</string>

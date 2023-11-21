@@ -3,6 +3,7 @@ package com.nmd.eventCalendar
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.ProgressDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -18,8 +19,10 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import com.google.android.gms.tasks.Task
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
@@ -34,16 +37,15 @@ class LoginActivity : BaseActivity() {
     private var emailPattern = Regex("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z.]+")
     private var progressDialog: ProgressDialog? = null
     var mAuth: FirebaseAuth? = null
+    var user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
     @RequiresApi(Build.VERSION_CODES.O)
     public override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = mAuth!!.currentUser
-        if (currentUser != null && checkIfEmailVerified(currentUser)) {
-            currentUser.reload()
+        if (user != null && checkIfEmailVerified(user)) {
+            Log.d("logged in user", checkIfEmailVerified(user).toString())
+            user!!.reload()
             openHomeActivity()
-        } else {
-//            Toast.makeText(this, "Please verify your email.", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -54,6 +56,7 @@ class LoginActivity : BaseActivity() {
         supportActionBar?.hide()
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
         emailAddress = binding.emailAddress
         password = binding.password
         loginButton = binding.loginButton
@@ -108,10 +111,38 @@ class LoginActivity : BaseActivity() {
         }
     }
 
+    private val onBackPressedCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            val alertDialogBuilder: MaterialAlertDialogBuilder = MaterialAlertDialogBuilder(this@LoginActivity)
+            alertDialogBuilder.setTitle("Finish")
+            alertDialogBuilder.setMessage("Are you sure you want to exit this app?")
+            // setup a dialog window
+            alertDialogBuilder.setCancelable(false)
+                .setPositiveButton("Yes",
+                    DialogInterface.OnClickListener { dialog, id ->
+                        run {
+                            finish()
+                            Toast.makeText(
+                                this@LoginActivity,
+                                "The app is closed.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    })
+                .setNegativeButton("No",
+                    DialogInterface.OnClickListener { dialog, id ->  })
+
+            // create an alert dialog
+            alertDialogBuilder.setCancelable(true)
+            alertDialogBuilder.show()
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     fun openHomeActivity() {
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
+        finish()
     }
 
     fun openSignUpActivity() {
@@ -119,6 +150,7 @@ class LoginActivity : BaseActivity() {
         startActivity(intent)
         val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
         vibrator.vibrate(15)
+        finish()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -131,6 +163,8 @@ class LoginActivity : BaseActivity() {
         } else if (pass.isEmpty() || pass.length < 8) {
             Log.d("TAG", "Enter a valid email!")
             password!!.error = "Password should contain at least 8 characters!"
+        } else if (checkIfEmailVerified(mAuth?.currentUser)) {
+            Toast.makeText(this, "Verify your email", Toast.LENGTH_LONG).show()
         } else {
             progressDialog!!.setMessage("Please wait...")
             progressDialog!!.setTitle("Signing in")
@@ -153,6 +187,7 @@ class LoginActivity : BaseActivity() {
                             mPrefs?.username = currentUser.displayName
                             mPrefs?.email = email
                             mPrefs?.password = pass
+                            Log.d("mPrefs", mPrefs.toString())
                         }
 
                         // Sign in success, update UI with the signed-in user's information
